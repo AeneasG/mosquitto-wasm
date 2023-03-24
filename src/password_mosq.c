@@ -52,7 +52,7 @@ Contributors:
 #else
 #  include <stdbool.h>
 #  include <unistd.h>
-#  include <termios.h>
+//#  include <termios.h>
 #  include <sys/stat.h>
 #endif
 

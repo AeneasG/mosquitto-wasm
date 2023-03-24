@@ -21,7 +21,7 @@ Contributors:
 
 #ifdef WIN32
 #	include <windows.h>
-#else
+#elif !defined(__wasi__)
 #	include <dlfcn.h>
 #endif
 
@@ -29,7 +29,7 @@ Contributors:
 #	define LIB_LOAD(A) LoadLibrary(A)
 #	define LIB_CLOSE(A) FreeLibrary(A)
 #	define LIB_SYM(HANDLE, SYM) GetProcAddress(HANDLE, SYM)
-#else
+#elif !defined(__wasi__)
 #	define LIB_LOAD(A) dlopen(A, RTLD_NOW|RTLD_GLOBAL)
 #	define LIB_CLOSE(A) dlclose(A)
 #	define LIB_SYM(HANDLE, SYM) dlsym(HANDLE, SYM)

@@ -29,16 +29,25 @@ Contributors:
 #  include <dirent.h>
 #  include <strings.h>
 #endif
+#ifdef __wasi__
+#include <__struct_sockaddr_in.h>
+#include <__struct_sockaddr_in6.h>
+#include <__struct_sockaddr_un.h>
+#include <__typedef_socklen_t.h>
+#include <netinet/in.h>
+#include <wasi_socket_ext.h>
+#include <sys/socket.h>
+#endif
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__wasi__)
 #  include <netdb.h>
 #  include <sys/socket.h>
-#else
+#elif defined(WIN32)
 #  include <winsock2.h>
 #  include <ws2tcpip.h>
 #endif
 
-#if !defined(WIN32) && !defined(__CYGWIN__)
+#if !defined(WIN32) && !defined(__CYGWIN__) && !defined(__wasi__)
 #  include <syslog.h>
 #endif
 
@@ -95,7 +104,7 @@ static int conf__attempt_resolve(const char *host, const char *text, unsigned in
 		freeaddrinfo(gai_res);
 	}
 	if(rc != 0){
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__wasi__)
 		if(rc == EAI_SYSTEM){
 			if(errno == ENOENT){
 				log__printf(NULL, log, "%s: Unable to resolve %s %s.", msg, text, host);
@@ -105,7 +114,7 @@ static int conf__attempt_resolve(const char *host, const char *text, unsigned in
 		}else{
 			log__printf(NULL, log, "%s: Error resolving %s: %s.", msg, text, gai_strerror(rc));
 		}
-#else
+#elif defined(WIN32)
 		if(rc == WSAHOST_NOT_FOUND){
 			log__printf(NULL, log, "%s: Error resolving %s.", msg, text);
 		}
@@ -175,7 +184,7 @@ static void config__init_reload(struct mosquitto__config *config)
 	}else{
 		config->log_dest = MQTT3_LOG_STDERR;
 	}
-#else
+#elif !defined(__wasi__)
 	config->log_facility = LOG_DAEMON;
 	config->log_dest = MQTT3_LOG_STDERR | MQTT3_LOG_DLT;
 	if(db.verbose){
@@ -1572,7 +1581,7 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 				}else if(!strcmp(token, "log_facility")){
 #if defined(WIN32) || defined(__CYGWIN__)
 					log__printf(NULL, MOSQ_LOG_WARNING, "Warning: log_facility not supported on Windows.");
-#else
+#elif !defined(__wasi__)
 					if(conf__parse_int(&token, "log_facility", &tmp_int, saveptr)) return MOSQ_ERR_INVAL;
 					switch(tmp_int){
 						case 0:

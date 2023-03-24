@@ -80,9 +80,11 @@ OBJS=	mosquitto.o \
 		will_delay.o \
 		will_mosq.o \
 		xtreport.o
+WAMR_PATH ?= /home/stefcroft/master_thesis/wasm-micro-runtime
+INCS += -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
 
 mosquitto : ${OBJS}
-	${CROSS_COMPILE}${CC} ${BROKER_LDFLAGS} $^ -o $@ $(BROKER_LDADD)
+	${CROSS_COMPILE}${CC} ${BROKER_LDFLAGS} $^ -o $@ $(BROKER_LDADD) $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c
 
 mosquitto.o : mosquitto.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@

@@ -18,7 +18,20 @@ Contributors:
 
 #include "config.h"
 
-#ifndef WIN32
+#ifdef __wasi__
+#include <__struct_sockaddr.h>
+#include <__typedef_socklen_t.h>
+#include <__typedef_ssize_t.h>
+#include <wasi_socket_ext.h>
+//#include <wasi/api.h>
+#include <arpa/inet.h>
+#include <ifaddrs.h>
+#include <netinet/tcp.h>
+#include <strings.h>
+#include <unistd.h>
+#include <features.h>
+
+#elif !defined(WIN32)
 #  include <arpa/inet.h>
 #  include <ifaddrs.h>
 #  include <netdb.h>
@@ -705,7 +718,7 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 
 	rc = getaddrinfo(listener->host, service, &hints, &ainfo);
 	if (rc){
-		log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", gai_strerror(rc));
+//		log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", gai_strerror(rc));
 		return INVALID_SOCKET;
 	}
 
@@ -811,16 +824,16 @@ static int net__socket_listen_unix(struct mosquitto__listener *listener)
 	if(listener->unix_socket_path == NULL){
 		return MOSQ_ERR_INVAL;
 	}
-	if(strlen(listener->unix_socket_path) > sizeof(addr.sun_path)-1){
-		log__printf(NULL, MOSQ_LOG_ERR, "Error: Path to unix socket is too long \"%s\".", listener->unix_socket_path);
-		return MOSQ_ERR_INVAL;
-	}
+//	if(strlen(listener->unix_socket_path) > sizeof(addr.sun_path)-1){
+//		log__printf(NULL, MOSQ_LOG_ERR, "Error: Path to unix socket is too long \"%s\".", listener->unix_socket_path);
+//		return MOSQ_ERR_INVAL;
+//	}
 
 	unlink(listener->unix_socket_path);
 	log__printf(NULL, MOSQ_LOG_INFO, "Opening unix listen socket on path %s.", listener->unix_socket_path);
 	memset(&addr, 0, sizeof(struct sockaddr_un));
 	addr.sun_family = AF_UNIX;
-	strncpy(addr.sun_path, listener->unix_socket_path, sizeof(addr.sun_path)-1);
+//	strncpy(addr.sun_path, listener->unix_socket_path, sizeof(addr.sun_path)-1);
 
 	sock = socket(AF_UNIX, SOCK_STREAM, 0);
 	if(sock == INVALID_SOCKET){
@@ -951,7 +964,7 @@ int net__socket_get_address(mosq_sock_t sock, char *buf, size_t len, uint16_t *r
 			struct sockaddr_un un;
 			addrlen = sizeof(struct sockaddr_un);
 			if(!getsockname(sock, (struct sockaddr *)&un, &addrlen)){
-				snprintf(buf, len, "%s", un.sun_path);
+//				snprintf(buf, len, "%s", un.sun_path);
 			}else{
 				snprintf(buf, len, "unix-socket");
 			}

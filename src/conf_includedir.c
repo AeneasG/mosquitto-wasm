@@ -30,7 +30,14 @@ Contributors:
 #  include <dirent.h>
 #endif
 
-#ifndef WIN32
+#ifdef __wasi__
+#include <__struct_sockaddr_in.h>
+#include <__struct_sockaddr_in6.h>
+#include <__struct_sockaddr_un.h>
+#include <__typedef_socklen_t.h>
+#include <netinet/in.h>
+#include <wasi_socket_ext.h>
+#elif !defined(WIN32)
 #  include <strings.h>
 #  include <netdb.h>
 #  include <sys/socket.h>
@@ -41,7 +48,7 @@ Contributors:
 
 #if defined(__HAIKU__)
 #  include <syslog.h>
-#elif !defined(WIN32) && !defined(__CYGWIN__) && !defined(__QNX__)
+#elif !defined(WIN32) && !defined(__CYGWIN__) && !defined(__QNX__) && !defined(__wasi__)
 #  include <sys/syslog.h>
 #endif
 

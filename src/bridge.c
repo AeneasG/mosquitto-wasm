@@ -15,6 +15,7 @@ SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
 Contributors:
    Roger Light - initial implementation and documentation.
 */
+#ifdef WITH_BRIDGE
 
 #include "config.h"
 
@@ -51,8 +52,6 @@ Contributors:
 #include "tls_mosq.h"
 #include "util_mosq.h"
 #include "will_mosq.h"
-
-#ifdef WITH_BRIDGE
 
 static void bridge__backoff_step(struct mosquitto *context);
 static void bridge__backoff_reset(struct mosquitto *context);

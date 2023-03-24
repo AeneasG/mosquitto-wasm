@@ -38,8 +38,14 @@ Contributors:
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
-#ifndef WIN32
+
+#if !defined(WIN32) && !defined(__wasi__)
 #  include <sys/socket.h>
+#elif defined(__wasi__)
+#include <sys/socket.h>
+#include <wasi_socket_ext.h>
+#include <signal.h>
+#include <poll.h>
 #endif
 #include <time.h>
 
@@ -69,7 +75,7 @@ int mux_poll__init(struct mosquitto__listener_sock *listensock, int listensock_c
 	size_t i;
 	size_t pollfd_index = 0;
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__wasi__)
 	sigemptyset(&my_sigblock);
 	sigaddset(&my_sigblock, SIGINT);
 	sigaddset(&my_sigblock, SIGTERM);
@@ -196,10 +202,12 @@ int mux_poll__handle(struct mosquitto__listener_sock *listensock, int listensock
 	sigset_t origsig;
 #endif
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__wasi__)
 	sigprocmask(SIG_SETMASK, &my_sigblock, &origsig);
 	fdcount = poll(pollfds, pollfd_current_max+1, 100);
 	sigprocmask(SIG_SETMASK, &origsig, NULL);
+#elif defined(__wasi__)
+    fdcount = poll(pollfds, pollfd_current_max+1, 100);
 #else
 	fdcount = WSAPoll(pollfds, pollfd_current_max+1, 100);
 #endif

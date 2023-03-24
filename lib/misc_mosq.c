@@ -52,78 +52,78 @@ FILE *mosquitto__fopen(const char *path, const char *mode, bool restrict_read)
 	if(rc == 0 || rc > 4096){
 		return NULL;
 	}else{
-		if (restrict_read) {
-			HANDLE hfile;
-			SECURITY_ATTRIBUTES sec;
-			EXPLICIT_ACCESS_A ea;
-			PACL pacl = NULL;
-			char username[UNLEN + 1];
-			DWORD ulen = UNLEN;
-			SECURITY_DESCRIPTOR sd;
-			DWORD dwCreationDisposition;
-			int fd;
-			FILE *fptr;
-
-			switch(mode[0]){
-				case 'a':
-					dwCreationDisposition = OPEN_ALWAYS;
-					flags = _O_APPEND;
-					break;
-				case 'r':
-					dwCreationDisposition = OPEN_EXISTING;
-					flags = _O_RDONLY;
-					break;
-				case 'w':
-					dwCreationDisposition = CREATE_ALWAYS;
-					break;
-				default:
-					return NULL;
-			}
-
-			GetUserNameA(username, &ulen);
-			if (!InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION)) {
-				return NULL;
-			}
-			BuildExplicitAccessWithNameA(&ea, username, GENERIC_ALL, SET_ACCESS, NO_INHERITANCE);
-			if (SetEntriesInAclA(1, &ea, NULL, &pacl) != ERROR_SUCCESS) {
-				return NULL;
-			}
-			if (!SetSecurityDescriptorDacl(&sd, TRUE, pacl, FALSE)) {
-				LocalFree(pacl);
-				return NULL;
-			}
-
-			memset(&sec, 0, sizeof(sec));
-			sec.nLength = sizeof(SECURITY_ATTRIBUTES);
-			sec.bInheritHandle = FALSE;
-			sec.lpSecurityDescriptor = &sd;
-
-			hfile = CreateFileA(buf, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
-				&sec,
-				dwCreationDisposition,
-				FILE_ATTRIBUTE_NORMAL,
-				NULL);
-
-			LocalFree(pacl);
-
-			fd = _open_osfhandle((intptr_t)hfile, flags);
-			if (fd < 0) {
-				return NULL;
-			}
-
-			fptr = _fdopen(fd, mode);
-			if (!fptr) {
-				_close(fd);
-				return NULL;
-			}
-			if(mode[0] == 'a'){
-				fseek(fptr, 0, SEEK_END);
-			}
-			return fptr;
-
-		}else {
+//		if (restrict_read) {
+//			HANDLE hfile;
+//			SECURITY_ATTRIBUTES sec;
+//			EXPLICIT_ACCESS_A ea;
+//			PACL pacl = NULL;
+//			char username[UNLEN + 1];
+//			DWORD ulen = UNLEN;
+//			SECURITY_DESCRIPTOR sd;
+//			DWORD dwCreationDisposition;
+//			int fd;
+//			FILE *fptr;
+//
+//			switch(mode[0]){
+//				case 'a':
+//					dwCreationDisposition = OPEN_ALWAYS;
+//					flags = _O_APPEND;
+//					break;
+//				case 'r':
+//					dwCreationDisposition = OPEN_EXISTING;
+//					flags = _O_RDONLY;
+//					break;
+//				case 'w':
+//					dwCreationDisposition = CREATE_ALWAYS;
+//					break;
+//				default:
+//					return NULL;
+//			}
+//
+//			GetUserNameA(username, &ulen);
+//			if (!InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION)) {
+//				return NULL;
+//			}
+//			BuildExplicitAccessWithNameA(&ea, username, GENERIC_ALL, SET_ACCESS, NO_INHERITANCE);
+//			if (SetEntriesInAclA(1, &ea, NULL, &pacl) != ERROR_SUCCESS) {
+//				return NULL;
+//			}
+//			if (!SetSecurityDescriptorDacl(&sd, TRUE, pacl, FALSE)) {
+//				LocalFree(pacl);
+//				return NULL;
+//			}
+//
+//			memset(&sec, 0, sizeof(sec));
+//			sec.nLength = sizeof(SECURITY_ATTRIBUTES);
+//			sec.bInheritHandle = FALSE;
+//			sec.lpSecurityDescriptor = &sd;
+//
+//			hfile = CreateFileA(buf, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
+//				&sec,
+//				dwCreationDisposition,
+//				FILE_ATTRIBUTE_NORMAL,
+//				NULL);
+//
+//			LocalFree(pacl);
+//
+//			fd = _open_osfhandle((intptr_t)hfile, flags);
+//			if (fd < 0) {
+//				return NULL;
+//			}
+//
+//			fptr = _fdopen(fd, mode);
+//			if (!fptr) {
+//				_close(fd);
+//				return NULL;
+//			}
+//			if(mode[0] == 'a'){
+//				fseek(fptr, 0, SEEK_END);
+//			}
+//			return fptr;
+//
+//		}else {
 			return fopen(buf, mode);
-		}
+//		}
 	}
 #else
 	if(mode[0] == 'r'){
@@ -138,18 +138,18 @@ FILE *mosquitto__fopen(const char *path, const char *mode, bool restrict_read)
 		}
 	}
 
-	if (restrict_read) {
-		FILE *fptr;
-		mode_t old_mask;
-
-		old_mask = umask(0077);
-		fptr = fopen(path, mode);
-		umask(old_mask);
-
-		return fptr;
-	}else{
+//	if (restrict_read) {
+//		FILE *fptr;
+//		mode_t old_mask;
+//
+//		old_mask = umask(0077);
+//		fptr = fopen(path, mode);
+//		umask(old_mask);
+//
+//		return fptr;
+//	}else{
 		return fopen(path, mode);
-	}
+//	}
 #endif
 }
 

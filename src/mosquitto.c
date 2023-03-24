@@ -21,12 +21,12 @@ Contributors:
 #ifndef WIN32
 /* For initgroups() */
 #  include <unistd.h>
-#  include <grp.h>
+//#  include <grp.h>
 #  include <assert.h>
 #endif
 
 #ifndef WIN32
-#include <pwd.h>
+//#include <pwd.h>
 #else
 #include <process.h>
 #include <winsock2.h>
@@ -84,7 +84,7 @@ int deny_severity = LOG_INFO;
  */
 int drop_privileges(struct mosquitto__config *config)
 {
-#if !defined(__CYGWIN__) && !defined(WIN32)
+#if !defined(__CYGWIN__) && !defined(WIN32) && !defined(__wasi__)
 	struct passwd *pwd;
 	char *err;
 	int rc;
@@ -141,7 +141,7 @@ int drop_privileges(struct mosquitto__config *config)
 
 static void mosquitto__daemonise(void)
 {
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__wasi__)
 	char *err;
 	pid_t pid;
 

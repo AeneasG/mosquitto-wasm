@@ -36,7 +36,10 @@ Contributors:
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
-#ifndef WIN32
+#ifdef __wasi__
+#include <wasi_socket_ext.h>
+#include <__typedef_socklen_t.h>
+#elif !defined(WIN32)
 #  include <sys/socket.h>
 #endif
 #include <time.h>
