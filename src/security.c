@@ -42,7 +42,7 @@ void LIB_ERROR(void)
 	log__printf(NULL, MOSQ_LOG_ERR, "Load error: %s", buf);
 	LocalFree(buf);
 #else
-	log__printf(NULL, MOSQ_LOG_ERR, "Load error: %s", dlerror());
+//	log__printf(NULL, MOSQ_LOG_ERR, "Load error: %s", dlerror());
 #endif
 }
 

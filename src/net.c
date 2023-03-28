@@ -23,13 +23,14 @@ Contributors:
 #include <__typedef_socklen_t.h>
 #include <__typedef_ssize_t.h>
 #include <wasi_socket_ext.h>
-//#include <wasi/api.h>
+#include <wasi/api.h>
 #include <arpa/inet.h>
 #include <ifaddrs.h>
 #include <netinet/tcp.h>
 #include <strings.h>
 #include <unistd.h>
 #include <features.h>
+#include <sys/socket.h>
 
 #elif !defined(WIN32)
 #  include <arpa/inet.h>
@@ -635,10 +636,10 @@ static int net__bind_interface(struct mosquitto__listener *listener, struct addr
 	 * matching interface in the later bind().
 	 */
 	struct ifaddrs *ifaddr, *ifa;
-	if(getifaddrs(&ifaddr) < 0){
-		net__print_error(MOSQ_LOG_ERR, "Error: %s");
-		return MOSQ_ERR_ERRNO;
-	}
+//	if(getifaddrs(&ifaddr) < 0){
+//		net__print_error(MOSQ_LOG_ERR, "Error: %s");
+//		return MOSQ_ERR_ERRNO;
+//	}
 
 	for(ifa=ifaddr; ifa!=NULL; ifa=ifa->ifa_next){
 		if(ifa->ifa_addr == NULL){
@@ -662,7 +663,7 @@ static int net__bind_interface(struct mosquitto__listener *listener, struct addr
 							&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr,
 							sizeof(struct in_addr));
 
-					freeifaddrs(ifaddr);
+//					freeifaddrs(ifaddr);
 					return MOSQ_ERR_SUCCESS;
 				}
 			}else if(rp->ai_addr->sa_family == AF_INET6){
@@ -678,13 +679,13 @@ static int net__bind_interface(struct mosquitto__listener *listener, struct addr
 					memcpy(&((struct sockaddr_in6 *)rp->ai_addr)->sin6_addr,
 							&((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr,
 							sizeof(struct in6_addr));
-					freeifaddrs(ifaddr);
+//					freeifaddrs(ifaddr);
 					return MOSQ_ERR_SUCCESS;
 				}
 			}
 		}
 	}
-	freeifaddrs(ifaddr);
+//	freeifaddrs(ifaddr);
 	log__printf(NULL, MOSQ_LOG_WARNING, "Warning: Interface %s does not support %s configuration.",
 	            listener->bind_interface, rp->ai_addr->sa_family == AF_INET ? "IPv4" : "IPv6");
 	return MOSQ_ERR_NOT_FOUND;
@@ -711,14 +712,13 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 	if(listener->socket_domain){
 		hints.ai_family = listener->socket_domain;
 	}else{
-		hints.ai_family = AF_UNSPEC;
+		hints.ai_family = AF_INET;
 	}
-	hints.ai_flags = AI_PASSIVE;
 	hints.ai_socktype = SOCK_STREAM;
 
 	rc = getaddrinfo(listener->host, service, &hints, &ainfo);
 	if (rc){
-//		log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", gai_strerror(rc));
+        perror("getaddrinfo");
 		return INVALID_SOCKET;
 	}
 
@@ -760,7 +760,7 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 #endif
 
 		if(net__socket_nonblock(&sock)){
-			freeaddrinfo(ainfo);
+//			freeaddrinfo(ainfo);
 			mosquitto__free(listener->socks);
 			return 1;
 		}
@@ -787,20 +787,20 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 #endif
 			net__print_error(MOSQ_LOG_ERR, "Error: %s");
 			COMPAT_CLOSE(sock);
-			freeaddrinfo(ainfo);
+//			freeaddrinfo(ainfo);
 			mosquitto__free(listener->socks);
 			return 1;
 		}
 
 		if(listen(sock, 100) == -1){
 			net__print_error(MOSQ_LOG_ERR, "Error: %s");
-			freeaddrinfo(ainfo);
+//			freeaddrinfo(ainfo);
 			COMPAT_CLOSE(sock);
 			mosquitto__free(listener->socks);
 			return 1;
 		}
 	}
-	freeaddrinfo(ainfo);
+//	freeaddrinfo(ainfo);
 
 #ifndef WIN32
 	if(listener->bind_interface && !interface_bound){
