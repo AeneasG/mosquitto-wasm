@@ -139,8 +139,9 @@ DB_HTML_XSL=man/html.xsl
 
 #MANCOUNTRIES=en_GB
 
-UNAME:=$(shell uname -s)
+UNAME?=$(shell uname -s)
 ARCH:=$(shell uname -p)
+TARGET?=x86_64-linux-gnu
 
 ifeq ($(UNAME),SunOS)
 	ifeq ($(CC),cc)
@@ -168,7 +169,7 @@ WAMR_PATH ?= /home/stefcroft/master_thesis/wasm-micro-runtime
 INCS += -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
 BROKER_CPPFLAGS:=$(LIB_CPPFLAGS) -I../lib
 BROKER_CFLAGS:=${CFLAGS} -Wno-sign-conversion -Wno-unused-variable -Wno-unused-parameter -Wno-visibility -Wno-sign-compare -Wno-unused-function -DVERSION="\"${VERSION}\"" -DWITH_BROKER -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID ${INCS}
-BROKER_LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=/opt/wasi-sdk/share/wasi-sysroot/share/wasm32-wasi/defined-symbols.txt --sysroot=/opt/wasi-sdk/share/wasi-sysroot/ ${INCS}
+BROKER_LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=/opt/wasi-sdk/share/wasi-sysroot/share/wasm32-wasi/defined-symbols.txt --sysroot=/opt/wasi-sdk/share/wasi-sysroot/ ${INCS} $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c
 BROKER_LDADD:=
 
 CLIENT_CPPFLAGS:=$(CPPFLAGS) -I.. -I../include
@@ -184,7 +185,9 @@ PLUGIN_LDFLAGS:=$(LDFLAGS)
 
 ifneq ($(or $(findstring $(UNAME),FreeBSD), $(findstring $(UNAME),OpenBSD), $(findstring $(UNAME),NetBSD)),)
 	BROKER_LDADD:=$(BROKER_LDADD) -lm
-#	BROKER_LDFLAGS:=$(BROKER_LDFLAGS) -Wl,--dynamic-list=linker.syms
+	ifneq ($(TARGET),WASI)
+		BROKER_LDFLAGS:=$(BROKER_LDFLAGS) -Wl,--dynamic-list=linker.syms
+	endif
 	SEDINPLACE:=-i ""
 else
 	BROKER_LDADD:=$(BROKER_LDADD) -ldl -lm
@@ -193,7 +196,9 @@ endif
 
 ifeq ($(UNAME),Linux)
 	BROKER_LDADD:=$(BROKER_LDADD) -lrt
-#	BROKER_LDFLAGS:=$(BROKER_LDFLAGS) -Wl,--dynamic-list=linker.syms
+	ifneq ($(TARGET),WASI)
+		BROKER_LDFLAGS:=$(BROKER_LDFLAGS) -Wl,--dynamic-list=linker.syms
+	endif
 	LIB_LIBADD:=$(LIB_LIBADD) -lrt
 endif
 

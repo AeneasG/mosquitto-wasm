@@ -19,11 +19,10 @@ Contributors:
 #define NET_MOSQ_H
 
 #ifndef WIN32
+#  include <sys/socket.h>
 #ifdef __wasi__
-#include <sys/socket.h>
 #include <wasi_socket_ext.h>
 #endif
-#  include <sys/socket.h>
 #  include <unistd.h>
 #else
 #  include <winsock2.h>
