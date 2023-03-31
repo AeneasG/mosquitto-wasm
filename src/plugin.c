@@ -62,26 +62,26 @@ int plugin__load_v5(struct mosquitto__listener *listener, struct mosquitto__auth
 	int rc;
 	mosquitto_plugin_id_t *pid;
 
-//	if(!(plugin->plugin_init_v5 = (FUNC_plugin_init_v5)LIB_SYM(lib, "mosquitto_plugin_init"))){
-//		log__printf(NULL, MOSQ_LOG_ERR,
-//				"Error: Unable to load plugin function mosquitto_plugin_init().");
-//		LIB_ERROR();
-////		LIB_CLOSE(lib);
-//		return MOSQ_ERR_UNKNOWN;
-//	}
-//	if(!(plugin->plugin_cleanup_v5 = (FUNC_plugin_cleanup_v5)LIB_SYM(lib, "mosquitto_plugin_cleanup"))){
-//		log__printf(NULL, MOSQ_LOG_ERR,
-//				"Error: Unable to load plugin function mosquitto_plugin_cleanup().");
-//		LIB_ERROR();
-////		LIB_CLOSE(lib);
-//		return MOSQ_ERR_UNKNOWN;
-//	}
+	if(!(plugin->plugin_init_v5 = (FUNC_plugin_init_v5)LIB_SYM(lib, "mosquitto_plugin_init"))){
+		log__printf(NULL, MOSQ_LOG_ERR,
+				"Error: Unable to load plugin function mosquitto_plugin_init().");
+		LIB_ERROR();
+		LIB_CLOSE(lib);
+		return MOSQ_ERR_UNKNOWN;
+	}
+	if(!(plugin->plugin_cleanup_v5 = (FUNC_plugin_cleanup_v5)LIB_SYM(lib, "mosquitto_plugin_cleanup"))){
+		log__printf(NULL, MOSQ_LOG_ERR,
+				"Error: Unable to load plugin function mosquitto_plugin_cleanup().");
+		LIB_ERROR();
+		LIB_CLOSE(lib);
+		return MOSQ_ERR_UNKNOWN;
+	}
 
 	pid = mosquitto__calloc(1, sizeof(mosquitto_plugin_id_t));
 	if(pid == NULL){
 		log__printf(NULL, MOSQ_LOG_ERR,
 				"Error: Out of memory.");
-//		LIB_CLOSE(lib);
+		LIB_CLOSE(lib);
 		return MOSQ_ERR_NOMEM;
 	}
 	pid->listener = listener;
