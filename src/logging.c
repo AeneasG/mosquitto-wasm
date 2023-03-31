@@ -349,9 +349,6 @@ int log__printf(struct mosquitto *mosq, unsigned int priority, const char *fmt, 
 	va_start(va, fmt);
 	rc = log__vprintf(priority, fmt, va);
 	va_end(va);
-    /* TODO fix logging */
-    printf(fmt, va);
-    printf("\n");
 
 	return rc;
 }

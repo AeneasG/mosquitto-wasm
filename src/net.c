@@ -712,13 +712,17 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 	if(listener->socket_domain){
 		hints.ai_family = listener->socket_domain;
 	}else{
-		hints.ai_family = AF_INET;
+#ifdef __wasi__
+        log__printf(NULL, MOSQ_LOG_ERR, "WASI does not support socket_domain AF_UNSPEC. Specify socket_domain AF_INET or AF_INET6.");
+        return __WASI_ERRNO_NOTSUP;
+#endif
+		hints.ai_family = AF_UNSPEC;
 	}
 	hints.ai_socktype = SOCK_STREAM;
 
 	rc = getaddrinfo(listener->host, service, &hints, &ainfo);
 	if (rc){
-        perror("getaddrinfo");
+        log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", strerror(errno));
 		return INVALID_SOCKET;
 	}
 

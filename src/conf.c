@@ -29,20 +29,20 @@ Contributors:
 #  include <dirent.h>
 #  include <strings.h>
 #endif
+
 #ifdef __wasi__
 #include <__struct_sockaddr_in.h>
 #include <__struct_sockaddr_in6.h>
 #include <__struct_sockaddr_un.h>
 #include <__typedef_socklen_t.h>
+#include <errno.h>
 #include <netinet/in.h>
 #include <wasi_socket_ext.h>
 #include <sys/socket.h>
-#endif
-
-#if !defined(WIN32) && !defined(__wasi__)
+#elif !defined(WIN32)
 #  include <netdb.h>
 #  include <sys/socket.h>
-#elif defined(WIN32)
+#else
 #  include <winsock2.h>
 #  include <ws2tcpip.h>
 #endif
@@ -117,7 +117,15 @@ static int conf__attempt_resolve(const char *host, const char *text, unsigned in
 #elif defined(WIN32)
 		if(rc == WSAHOST_NOT_FOUND){
 			log__printf(NULL, log, "%s: Error resolving %s.", msg, text);
-		}
+        }
+#elif defined(__wasi__)
+        if(rc != 0) {
+            if(errno == ENOENT) {
+                log__printf(NULL, log, "%s: Unable to resolve %s %s.", msg, text, host);
+            } else if (errno == EACCES) {
+                log__printf(NULL, log, "%s: Error resolving %s: %s.", msg, text, strerror(errno));
+            }
+        }
 #endif
 		return MOSQ_ERR_INVAL;
 	}
@@ -184,18 +192,21 @@ static void config__init_reload(struct mosquitto__config *config)
 	}else{
 		config->log_dest = MQTT3_LOG_STDERR;
 	}
-#elif !defined(__wasi__)
+#else
+#ifndef __wasi__
 	config->log_facility = LOG_DAEMON;
+#endif /* __wasi__ */
 	config->log_dest = MQTT3_LOG_STDERR | MQTT3_LOG_DLT;
 	if(db.verbose){
 		config->log_type = UINT_MAX;
 	}else{
 		config->log_type = MOSQ_LOG_ERR | MOSQ_LOG_WARNING | MOSQ_LOG_NOTICE | MOSQ_LOG_INFO;
 	}
-#endif
+#endif /* defined(WIN32) || defined(__CYGWIN__) */
 	config->log_timestamp = true;
 	mosquitto__free(config->log_timestamp_format);
-	config->log_timestamp_format = NULL;
+    /* TODO: revert this for upstream and configure it in config file */
+	config->log_timestamp_format = "%Y-%m-%dT%H:%M:%S";
 	config->max_keepalive = 65535;
 	config->max_packet_size = 0;
 	config->max_inflight_messages = 20;
@@ -1581,7 +1592,9 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 				}else if(!strcmp(token, "log_facility")){
 #if defined(WIN32) || defined(__CYGWIN__)
 					log__printf(NULL, MOSQ_LOG_WARNING, "Warning: log_facility not supported on Windows.");
-#elif !defined(__wasi__)
+#elif __wasi__
+                    log__printf(NULL, MOSQ_LOG_WARNING, "Warning: log_facility not supported in WASI.");
+#else
 					if(conf__parse_int(&token, "log_facility", &tmp_int, saveptr)) return MOSQ_ERR_INVAL;
 					switch(tmp_int){
 						case 0:

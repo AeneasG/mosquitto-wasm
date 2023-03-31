@@ -33,13 +33,8 @@ Contributors:
 #include <__struct_sockaddr_un.h>
 #include <__typedef_socklen_t.h>
 #include <netinet/in.h>
-#include <wasi_socket_ext.h>
 #include <wasi/api.h>
-#include <__struct_sockaddr_in.h>
-#include <__struct_sockaddr_in6.h>
-#include <__struct_sockaddr_un.h>
 #include <wasi_socket_ext.h>
-#include <__typedef_socklen_t.h>
 #else
 #include <netdb.h>
 #endif
@@ -506,13 +501,13 @@ static int net__try_connect_unix(const char *host, mosq_sock_t *sock)
 	int s;
 	int rc;
 
-	if(host == NULL || strlen(host) == 0/* || strlen(host) > sizeof(addr.sun_path)-1*/){
+	if(host == NULL || strlen(host) == 0 || strlen(host) > sizeof(addr.sun_path)-1){
 		return MOSQ_ERR_INVAL;
 	}
 
 	memset(&addr, 0, sizeof(struct sockaddr_un));
 	addr.sun_family = AF_UNIX;
-//	strncpy(addr.sun_path, host, sizeof(addr.sun_path)-1);
+	strncpy(addr.sun_path, host, sizeof(addr.sun_path)-1);
 
 	s = socket(AF_UNIX, SOCK_STREAM, 0);
 	if(s < 0){
@@ -1183,9 +1178,9 @@ int net__socketpair(mosq_sock_t *pairR, mosq_sock_t *pairW)
 	*pairR = INVALID_SOCKET;
 	*pairW = INVALID_SOCKET;
 
-//	if(socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1){
-//		return MOSQ_ERR_ERRNO;
-//	}
+	if(socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1){
+		return MOSQ_ERR_ERRNO;
+	}
 	if(net__socket_nonblock(&sv[0])){
 		COMPAT_CLOSE(sv[1]);
 		return MOSQ_ERR_ERRNO;

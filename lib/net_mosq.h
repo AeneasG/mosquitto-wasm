@@ -18,16 +18,15 @@ Contributors:
 #ifndef NET_MOSQ_H
 #define NET_MOSQ_H
 
+#ifndef WIN32
 #ifdef __wasi__
-#include <wasi_socket_ext.h>
-#include <wasi/api.h>
 #include <__struct_sockaddr_in.h>
 #include <__struct_sockaddr_in6.h>
 #include <__struct_sockaddr_un.h>
-#include <wasi_socket_ext.h>
 #include <__typedef_socklen_t.h>
-#include <unistd.h>
-#elif !defined(WIN32)
+#include <wasi/api.h>
+#include <wasi_socket_ext.h>
+#endif
 #  include <sys/socket.h>
 #  include <unistd.h>
 #else
