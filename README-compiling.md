@@ -23,3 +23,67 @@ compile on Windows or Mac.
 If you have any questions, problems or suggestions (particularly related to
 installing on a more unusual device) then please get in touch using the details
 in README.md.
+
+# Compile to WASM using WASI-SDK and run with WAMR
+For research purposes, mosquitto has been ported to WASM using WASI-SDK and WAMR. This guide aims to explain the necessary steps to come up with a basic and running version of Mosquitto. Note, that **not** all features are supported that native mosquitto supports.
+
+## Prerequisites
+Install WASI-SDK as well as WAMR-SDK as follows:
+### WASI-SDK
+Get a release of WASI-SDK from [here](https://github.com/WebAssembly/wasi-sdk/releases). For this guide, `wasi-sdk-20` has been used. Extract the archive to `/opt/wasi-sdk`.
+
+### WAMR
+Clone the repo of WAMR from [here](https://github.com/bytecodealliance/wasm-micro-runtime). At the time of writing, the commit `aaf671d` has been used.
+
+Optimally, clone WAMR into `/opt/wasm-micro-runtime` in order to avoid extra configuration later.
+
+#### Build WAMR
+Build your own WAMR runtime according to the guides provided in the repo or [here](https://wamr.gitbook.io/document/). For this guide, the runtime has been built for `Linux`.
+
+## Compile Mosquitto
+Build mosquitto as follows:
+```bash
+#! Root of repo
+
+cd src
+# ensure everything is clean before starting
+(cd .. && make clean)
+# build with make
+# you can omit WAMR_PATH if it equals to /opt/wasm-micro-runtime
+# you can omit WASI_SDK_PATH if it equals to /opt/wasi-sdk
+make TARGET=WASI WAMR_PATH=/path/to/WAMR/root WASI_SDK_PATH=/path/to/WASI-SDK/root 
+```
+You can add any other option to build mosquitto as described in the standard mosquitto documentation. However, note, that not all options are supported in WASI nor have been tested.
+
+Currently, known options that are not supported are:
+* `WITH_WRAP`
+* `WITH_TLS`
+* `WITH_TLS_PSK`
+* `WITH_THREADING`
+* `WITH_BRIDGE`
+* `WITH_PERSISTENCE`
+* `WITH_MEMORY_TRACKING`
+* `WITH_DB_UPGRADE`
+* `WITH_SYS_TREE`
+* `WITH_SYSTEMD`
+* `WITH_SRV`
+* `WITH_WEBSOCKETS`
+* `WITH_EC`
+* `WITH_SOCKS`
+* `WITH_ADNS`
+* `WITH_EPOLL`
+* `WITH_UNIX_SOCKETS`
+* `WITH_CJSON`
+* `WITH_CONTROL`
+* `WITH_JEMALLOC`
+
+## Run with WAMR
+Use your previously built WAMR runtime (in the following a file called `iwasm`) to run mosquitto as follows:
+```bash
+./iwasm --allow-resolve=<domains allowed to resolve> --addr-pool=<addr-pool to bind> mosquitto
+```
+To run it locally, you can for example run
+```bash
+# allow to resolve any domain and allow to bind IPv4 and IPv6 loopback addresses
+./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 mosquitto
+```
