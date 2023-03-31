@@ -28,12 +28,8 @@ Contributors:
 #define _GNU_SOURCE
 
 #ifdef __wasi__
-#include <__struct_sockaddr_in.h>
-#include <__struct_sockaddr_in6.h>
-#include <__struct_sockaddr_un.h>
-#include <__typedef_socklen_t.h>
 #include <netinet/in.h>
-#include <wasi/api.h>
+#include <sys/socket.h>
 #include <wasi_socket_ext.h>
 #else
 #include <netdb.h>

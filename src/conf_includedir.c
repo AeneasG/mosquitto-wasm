@@ -31,11 +31,8 @@ Contributors:
 #endif
 
 #ifdef __wasi__
-#include <__struct_sockaddr_in.h>
-#include <__struct_sockaddr_in6.h>
-#include <__struct_sockaddr_un.h>
-#include <__typedef_socklen_t.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
 #include <wasi_socket_ext.h>
 #elif !defined(WIN32)
 #  include <strings.h>

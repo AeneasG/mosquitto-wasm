@@ -19,11 +19,6 @@ Contributors:
 #include "config.h"
 
 #ifdef __wasi__
-#include <__struct_sockaddr.h>
-#include <__typedef_socklen_t.h>
-#include <__typedef_ssize_t.h>
-#include <wasi_socket_ext.h>
-#include <wasi/api.h>
 #include <arpa/inet.h>
 #include <ifaddrs.h>
 #include <netinet/tcp.h>
@@ -31,6 +26,8 @@ Contributors:
 #include <unistd.h>
 #include <features.h>
 #include <sys/socket.h>
+#include <wasi/api.h>
+#include <wasi_socket_ext.h>
 
 #elif !defined(WIN32)
 #  include <arpa/inet.h>

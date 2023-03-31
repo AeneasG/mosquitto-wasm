@@ -37,8 +37,8 @@ Contributors:
 #include <stdio.h>
 #include <string.h>
 #ifdef __wasi__
+#include <sys/socket.h>
 #include <wasi_socket_ext.h>
-#include <__typedef_socklen_t.h>
 #elif !defined(WIN32)
 #  include <sys/socket.h>
 #endif

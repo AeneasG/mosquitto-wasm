@@ -42,6 +42,7 @@ Contributors:
 #if !defined(WIN32) && !defined(__wasi__)
 #  include <sys/socket.h>
 #elif defined(__wasi__)
+#define SO_ERROR     4
 #include <sys/socket.h>
 #include <wasi_socket_ext.h>
 #include <signal.h>

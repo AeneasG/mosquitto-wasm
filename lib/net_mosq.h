@@ -20,11 +20,7 @@ Contributors:
 
 #ifndef WIN32
 #ifdef __wasi__
-#include <__struct_sockaddr_in.h>
-#include <__struct_sockaddr_in6.h>
-#include <__struct_sockaddr_un.h>
-#include <__typedef_socklen_t.h>
-#include <wasi/api.h>
+#include <sys/socket.h>
 #include <wasi_socket_ext.h>
 #endif
 #  include <sys/socket.h>
