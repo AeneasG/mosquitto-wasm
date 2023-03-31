@@ -626,7 +626,7 @@ int net__tls_load_verify(struct mosquitto__listener *listener)
 }
 
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__wasi__)
 static int net__bind_interface(struct mosquitto__listener *listener, struct addrinfo *rp)
 {
 	/*
@@ -636,10 +636,10 @@ static int net__bind_interface(struct mosquitto__listener *listener, struct addr
 	 * matching interface in the later bind().
 	 */
 	struct ifaddrs *ifaddr, *ifa;
-//	if(getifaddrs(&ifaddr) < 0){
-//		net__print_error(MOSQ_LOG_ERR, "Error: %s");
-//		return MOSQ_ERR_ERRNO;
-//	}
+	if(getifaddrs(&ifaddr) < 0){
+		net__print_error(MOSQ_LOG_ERR, "Error: %s");
+		return MOSQ_ERR_ERRNO;
+	}
 
 	for(ifa=ifaddr; ifa!=NULL; ifa=ifa->ifa_next){
 		if(ifa->ifa_addr == NULL){
@@ -663,7 +663,7 @@ static int net__bind_interface(struct mosquitto__listener *listener, struct addr
 							&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr,
 							sizeof(struct in_addr));
 
-//					freeifaddrs(ifaddr);
+					freeifaddrs(ifaddr);
 					return MOSQ_ERR_SUCCESS;
 				}
 			}else if(rp->ai_addr->sa_family == AF_INET6){
@@ -679,13 +679,13 @@ static int net__bind_interface(struct mosquitto__listener *listener, struct addr
 					memcpy(&((struct sockaddr_in6 *)rp->ai_addr)->sin6_addr,
 							&((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr,
 							sizeof(struct in6_addr));
-//					freeifaddrs(ifaddr);
+					freeifaddrs(ifaddr);
 					return MOSQ_ERR_SUCCESS;
 				}
 			}
 		}
 	}
-//	freeifaddrs(ifaddr);
+	freeifaddrs(ifaddr);
 	log__printf(NULL, MOSQ_LOG_WARNING, "Warning: Interface %s does not support %s configuration.",
 	            listener->bind_interface, rp->ai_addr->sa_family == AF_INET ? "IPv4" : "IPv6");
 	return MOSQ_ERR_NOT_FOUND;
@@ -718,6 +718,10 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 #endif
 		hints.ai_family = AF_UNSPEC;
 	}
+#ifndef __wasi__
+    // getaddrinfo implementation does not support ai_flags != 0
+    hints.ai_flags = AI_PASSIVE;
+#endif
 	hints.ai_socktype = SOCK_STREAM;
 
 	rc = getaddrinfo(listener->host, service, &hints, &ainfo);
@@ -764,12 +768,12 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 #endif
 
 		if(net__socket_nonblock(&sock)){
-//			freeaddrinfo(ainfo);
+			freeaddrinfo(ainfo);
 			mosquitto__free(listener->socks);
 			return 1;
 		}
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__wasi__)
 		if(listener->bind_interface){
 			/* It might be possible that an interface does not support all relevant sa_families.
 			 * We should successfully find at least one. */
@@ -791,20 +795,20 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 #endif
 			net__print_error(MOSQ_LOG_ERR, "Error: %s");
 			COMPAT_CLOSE(sock);
-//			freeaddrinfo(ainfo);
+			freeaddrinfo(ainfo);
 			mosquitto__free(listener->socks);
 			return 1;
 		}
 
 		if(listen(sock, 100) == -1){
 			net__print_error(MOSQ_LOG_ERR, "Error: %s");
-//			freeaddrinfo(ainfo);
+			freeaddrinfo(ainfo);
 			COMPAT_CLOSE(sock);
 			mosquitto__free(listener->socks);
 			return 1;
 		}
 	}
-//	freeaddrinfo(ainfo);
+	freeaddrinfo(ainfo);
 
 #ifndef WIN32
 	if(listener->bind_interface && !interface_bound){
@@ -828,16 +832,16 @@ static int net__socket_listen_unix(struct mosquitto__listener *listener)
 	if(listener->unix_socket_path == NULL){
 		return MOSQ_ERR_INVAL;
 	}
-//	if(strlen(listener->unix_socket_path) > sizeof(addr.sun_path)-1){
-//		log__printf(NULL, MOSQ_LOG_ERR, "Error: Path to unix socket is too long \"%s\".", listener->unix_socket_path);
-//		return MOSQ_ERR_INVAL;
-//	}
+	if(strlen(listener->unix_socket_path) > sizeof(addr.sun_path)-1){
+		log__printf(NULL, MOSQ_LOG_ERR, "Error: Path to unix socket is too long \"%s\".", listener->unix_socket_path);
+		return MOSQ_ERR_INVAL;
+	}
 
 	unlink(listener->unix_socket_path);
 	log__printf(NULL, MOSQ_LOG_INFO, "Opening unix listen socket on path %s.", listener->unix_socket_path);
 	memset(&addr, 0, sizeof(struct sockaddr_un));
 	addr.sun_family = AF_UNIX;
-//	strncpy(addr.sun_path, listener->unix_socket_path, sizeof(addr.sun_path)-1);
+	strncpy(addr.sun_path, listener->unix_socket_path, sizeof(addr.sun_path)-1);
 
 	sock = socket(AF_UNIX, SOCK_STREAM, 0);
 	if(sock == INVALID_SOCKET){
@@ -968,7 +972,7 @@ int net__socket_get_address(mosq_sock_t sock, char *buf, size_t len, uint16_t *r
 			struct sockaddr_un un;
 			addrlen = sizeof(struct sockaddr_un);
 			if(!getsockname(sock, (struct sockaddr *)&un, &addrlen)){
-//				snprintf(buf, len, "%s", un.sun_path);
+				snprintf(buf, len, "%s", un.sun_path);
 			}else{
 				snprintf(buf, len, "unix-socket");
 			}

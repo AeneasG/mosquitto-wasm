@@ -27,6 +27,9 @@ Contributors:
 #include "memory_mosq.h"
 #include "lib_load.h"
 #include "utlist.h"
+#ifdef __wasi__
+#include "errno.h"
+#endif
 
 typedef int (*FUNC_auth_plugin_version)(void);
 typedef int (*FUNC_plugin_version)(int, const int *);
@@ -41,8 +44,10 @@ void LIB_ERROR(void)
 			NULL, GetLastError(), LANG_NEUTRAL, (LPTSTR)&buf, 0, NULL);
 	log__printf(NULL, MOSQ_LOG_ERR, "Load error: %s", buf);
 	LocalFree(buf);
+#elif defined(__wasi__)
+	log__printf(NULL, MOSQ_LOG_ERR, "Load error: %s", strerror(errno));
 #else
-//	log__printf(NULL, MOSQ_LOG_ERR, "Load error: %s", dlerror());
+    log__printf(NULL, MOSQ_LOG_ERR, "Load error: %s", dlerror());
 #endif
 }
 

@@ -52,7 +52,9 @@ Contributors:
 #else
 #  include <stdbool.h>
 #  include <unistd.h>
-//#  include <termios.h>
+#ifndef __wasi__
+#  include <termios.h>
+#endif
 #  include <sys/stat.h>
 #endif
 

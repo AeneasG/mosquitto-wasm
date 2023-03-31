@@ -18,16 +18,16 @@ Contributors:
 
 #include "config.h"
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__wasi__)
 /* For initgroups() */
 #  include <unistd.h>
-//#  include <grp.h>
+#  include <grp.h>
 #  include <assert.h>
 #endif
 
-#ifndef WIN32
-//#include <pwd.h>
-#else
+#if !defined(WIN32) && !defined(__wasi__)
+#include <pwd.h>
+#elif defined(WIN32)
 #include <process.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -164,7 +164,7 @@ static void mosquitto__daemonise(void)
 	assert(freopen("/dev/null", "w", stdout));
 	assert(freopen("/dev/null", "w", stderr));
 #else
-	log__printf(NULL, MOSQ_LOG_WARNING, "Warning: Can't start in daemon mode in Windows.");
+	log__printf(NULL, MOSQ_LOG_WARNING, "Warning: Can't start in daemon mode in Windows / WASI.");
 #endif
 }
 

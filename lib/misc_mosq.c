@@ -153,7 +153,7 @@ FILE *mosquitto__fopen(const char *path, const char *mode, bool restrict_read)
 	}else{
 		return fopen(path, mode);
 	}
-#endif // #endif __wasi__
+#endif /* #endif __wasi__ */
 #endif
 }
 
