@@ -2,7 +2,7 @@ include ../config.mk
 
 .PHONY: all install uninstall clean reallyclean
 
-all : mosquitto
+all : mosquitto$(ENDING)
 
 OBJS=	mosquitto.o \
 		alias_mosq.o \
@@ -81,7 +81,7 @@ OBJS=	mosquitto.o \
 		will_mosq.o \
 		xtreport.o
 
-mosquitto : ${OBJS}
+mosquitto$(ENDING) : ${OBJS}
 	${CROSS_COMPILE}${CC} ${BROKER_LDFLAGS} $^ -o $@ $(BROKER_LDADD)
 
 mosquitto.o : mosquitto.c mosquitto_broker_internal.h

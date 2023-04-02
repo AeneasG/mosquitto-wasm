@@ -167,6 +167,7 @@ LIB_LIBADD:=$(LIBADD)
 
 BROKER_CPPFLAGS:=$(LIB_CPPFLAGS) -I../lib
 BROKER_LDADD:=
+ENDING:=
 ifeq ($(TARGET), WASI)
 	WAMR_PATH ?= /opt/wasm-micro-runtime
 	WASI_SDK_PATH?= /opt/wasi-sdk
@@ -174,6 +175,7 @@ ifeq ($(TARGET), WASI)
 	INCS += -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
 	BROKER_CFLAGS:=${CFLAGS} -Wno-sign-conversion -Wno-unused-variable -Wno-unused-parameter -Wno-visibility -Wno-sign-compare -Wno-unused-function -DVERSION="\"${VERSION}\"" -DWITH_BROKER -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID ${INCS}
     BROKER_LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=/opt/wasi-sdk/share/wasi-sysroot/share/wasm32-wasi/defined-symbols.txt --sysroot=/opt/wasi-sdk/share/wasi-sysroot/ ${INCS} $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c
+    ENDING:=.wasm
 else
 	BROKER_CFLAGS:=${CFLAGS} -DVERSION="\"${VERSION}\"" -DWITH_BROKER
     BROKER_LDFLAGS:=${LDFLAGS}
