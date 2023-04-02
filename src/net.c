@@ -710,10 +710,18 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 		hints.ai_family = listener->socket_domain;
 	}else{
 #ifdef __wasi__
-        log__printf(NULL, MOSQ_LOG_ERR, "WASI does not support socket_domain AF_UNSPEC. Specify socket_domain AF_INET or AF_INET6.");
-        return __WASI_ERRNO_NOTSUP;
-#endif
+        log__printf(NULL, MOSQ_LOG_WARNING, "WASI does not support socket_domain AF_UNSPEC. Trying to determine address type of %s", listener->host);
+        if (inet_pton(AF_INET, listener->host, &(hints.ai_addr)) == 1) {
+            hints.ai_family = AF_INET;
+        } else if (inet_pton(AF_INET6, listener->host, &(hints.ai_addr)) == 1) {
+            hints.ai_family = AF_INET6;
+        } else {
+            log__printf(NULL, MOSQ_LOG_ERR, "WASI does not support socket_domain AF_UNSPEC. Specify socket_domain AF_INET or AF_INET6.");
+            return __WASI_ERRNO_NOTSUP;
+        }
+#else
 		hints.ai_family = AF_UNSPEC;
+#endif
 	}
 #ifndef __wasi__
     // getaddrinfo implementation does not support ai_flags != 0

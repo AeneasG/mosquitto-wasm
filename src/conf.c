@@ -201,8 +201,7 @@ static void config__init_reload(struct mosquitto__config *config)
 #endif /* defined(WIN32) || defined(__CYGWIN__) */
 	config->log_timestamp = true;
 	mosquitto__free(config->log_timestamp_format);
-    /* TODO: revert this for upstream and configure it in config file */
-	config->log_timestamp_format = "%Y-%m-%dT%H:%M:%S";
+	config->log_timestamp_format = NULL;
 	config->max_keepalive = 65535;
 	config->max_packet_size = 0;
 	config->max_inflight_messages = 20;
