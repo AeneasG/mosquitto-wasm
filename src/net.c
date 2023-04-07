@@ -701,37 +701,65 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 #ifndef WIN32
 	bool interface_bound = false;
 #endif
+    memset(&hints, 0, sizeof(struct addrinfo));
 
 	if(!listener) return MOSQ_ERR_INVAL;
 
 	snprintf(service, 10, "%d", listener->port);
-	memset(&hints, 0, sizeof(struct addrinfo));
+    memset(&hints, 0, sizeof(struct addrinfo));
+
+#ifdef __wasi__
+    hints.ai_socktype = SOCK_STREAM;
+
+    if(listener->host == NULL){
+        listener->host = "localhost";
+    }
+
+    if(listener->socket_domain){
+        log__printf(NULL, MOSQ_LOG_DEBUG, "we have a socket_domain which is %d", listener->socket_domain);
+        hints.ai_family = listener->socket_domain;
+        rc = getaddrinfo(listener->host, service, &hints, &ainfo);
+    } else {
+        log__printf(NULL, MOSQ_LOG_DEBUG, "no socket_domain");
+
+        struct addrinfo *ainfoIpV4, *ainfoIpV6;
+        hints.ai_family = AF_INET;
+        int tryIpV4 = getaddrinfo(listener->host, service, &hints, &ainfoIpV4);
+        hints.ai_family = AF_INET6;
+        int tryIpV6 = getaddrinfo(listener->host, service, &hints, &ainfoIpV6);
+        if(tryIpV6 == 0 && tryIpV4 == 0) {
+            ainfo = ainfoIpV4;
+            rp = ainfo;
+            // combine ainfoIpV4 and ainfoIpV6 into ainfo
+            while(rp->ai_next != NULL) {
+                rp = rp ->ai_next;
+            }
+            rp->ai_next = ainfoIpV6;
+            rc = tryIpV6;
+        } else if(tryIpV6 == 0) {
+            ainfo = ainfoIpV6;
+            rc = tryIpV6;
+        } else if(tryIpV4 == 0) {
+            ainfo = ainfoIpV4;
+            rc = tryIpV4;
+        } else {
+            log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", strerror(errno));
+            rc = INVALID_SOCKET;
+        }
+    }
+#else
+    hints.ai_flags = AI_PASSIVE;
+    hints.ai_socktype = SOCK_STREAM;
+
 	if(listener->socket_domain){
 		hints.ai_family = listener->socket_domain;
 	}else{
-#ifdef __wasi__
-        log__printf(NULL, MOSQ_LOG_WARNING, "WASI does not support socket_domain AF_UNSPEC. Trying to determine address type of %s", listener->host);
-        if (inet_pton(AF_INET, listener->host, &(hints.ai_addr)) == 1) {
-            hints.ai_family = AF_INET;
-        } else if (inet_pton(AF_INET6, listener->host, &(hints.ai_addr)) == 1) {
-            hints.ai_family = AF_INET6;
-        } else {
-            log__printf(NULL, MOSQ_LOG_ERR, "WASI does not support socket_domain AF_UNSPEC. Specify socket_domain AF_INET or AF_INET6.");
-            return __WASI_ERRNO_NOTSUP;
-        }
-#else
-		hints.ai_family = AF_UNSPEC;
-#endif
+        hints.ai_family = AF_UNSPEC;
 	}
-#ifndef __wasi__
-    // getaddrinfo implementation does not support ai_flags != 0
-    hints.ai_flags = AI_PASSIVE;
-#endif
-	hints.ai_socktype = SOCK_STREAM;
-
 	rc = getaddrinfo(listener->host, service, &hints, &ainfo);
+#endif
 	if (rc){
-        log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", strerror(errno));
+		log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", strerror(errno));
 		return INVALID_SOCKET;
 	}
 
