@@ -44,10 +44,8 @@ Build your own WAMR runtime according to the guides provided in the repo or [her
 Build mosquitto as follows:
 ```bash
 #! Root of repo
-
-cd src
 # ensure everything is clean before starting
-(cd .. && make clean)
+make clean
 # build with make
 # you can omit WAMR_PATH if it equals to /opt/wasm-micro-runtime
 # you can omit WASI_SDK_PATH if it equals to /opt/wasi-sdk
