@@ -218,10 +218,14 @@ int mosquitto_reinitialise(struct mosquitto *mosq, const char *id, bool clean_st
 #endif
 	/* This must be after pthread_mutex_init(), otherwise the log mutex may be
 	 * used before being initialised. */
+#ifndef __wasi__
 	if(net__socketpair(&mosq->sockpairR, &mosq->sockpairW)){
 		log__printf(mosq, MOSQ_LOG_WARNING,
 				"Warning: Unable to open socket pair, outgoing publish commands may be delayed.");
 	}
+#else
+    log__printf(mosq, MOSQ_LOG_WARNING, "Warning: WASI does not support socket pair, outgoing publish commands may be delayed.");
+#endif
 
 	return MOSQ_ERR_SUCCESS;
 }

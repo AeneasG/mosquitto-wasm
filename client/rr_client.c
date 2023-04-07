@@ -304,7 +304,7 @@ static void print_usage(void)
 int main(int argc, char *argv[])
 {
 	int rc;
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__wasi__)
 		struct sigaction sigact;
 #endif
 
@@ -372,7 +372,7 @@ int main(int argc, char *argv[])
 		goto cleanup;
 	}
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__wasi__)
 	sigact.sa_handler = my_signal_handler;
 	sigemptyset(&sigact.sa_mask);
 	sigact.sa_flags = 0;

@@ -51,44 +51,59 @@ cd src
 # build with make
 # you can omit WAMR_PATH if it equals to /opt/wasm-micro-runtime
 # you can omit WASI_SDK_PATH if it equals to /opt/wasi-sdk
-make TARGET=WASI WAMR_PATH=/path/to/WAMR/root WASI_SDK_PATH=/path/to/WASI-SDK/root 
+make RUNTARGET=WASI WAMR_PATH=/path/to/WAMR/root WASI_SDK_PATH=/path/to/WASI-SDK/root 
 ```
 You can add any other option to build mosquitto as described in the standard mosquitto documentation. However, note, that not all options are supported in WASI nor have been tested.
 
-Currently, known options that are not supported are:
+Currently, known options that are not supported or not tested are:
 * `WITH_WRAP`
 * `WITH_TLS`
 * `WITH_TLS_PSK`
 * `WITH_THREADING`
 * `WITH_BRIDGE`
-* `WITH_PERSISTENCE`
-* `WITH_MEMORY_TRACKING`
 * `WITH_DB_UPGRADE`
-* `WITH_SYS_TREE`
 * `WITH_SYSTEMD`
 * `WITH_SRV`
 * `WITH_WEBSOCKETS`
 * `WITH_EC`
-* `WITH_SOCKS`
 * `WITH_ADNS`
-* `WITH_EPOLL`
-* `WITH_UNIX_SOCKETS`
-* `WITH_CJSON`
+* `WITH_EPOLL` (no support in WASI)
+* `WITH_UNIX_SOCKETS` (no support in WASI)
+* `WITH_JEMALLOC` (must provide JEMALLOC WASI library)
+
+Known options, that are supported
+* `WITH_THREADING`
+* `WITH_PERSISTENCE`
+* `WITH_MEMORY_TRACKING`
+* `WITH_SYS_TREE`
+* `WITH_SOCKS` (probably only impact on client)
+* `WITH_CJSON` (only relevant to the client)
 * `WITH_CONTROL`
-* `WITH_JEMALLOC`
+
 
 ## Run with WAMR
 Use your previously built WAMR runtime (in the following a file called `iwasm`) to run mosquitto as follows:
 ```bash
-./iwasm --allow-resolve=<domains allowed to resolve> --addr-pool=<addr-pool to bind> mosquitto.wasm
+./iwasm --allow-resolve=<domains allowed to resolve> --addr-pool=<addr-pool to bind> src/mosquitto.wasm
 ```
 To run it locally, you can for example run
 ```bash
 # allow to resolve any domain and allow to bind IPv4 and IPv6 loopback addresses
-./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 mosquitto.wasm
+./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 src/mosquitto.wasm
 ```
 To run with config, you should first tell the wasm runtime that mosquitto has the right to access the config file and then tell mosquitto the location of the config file
 ```bash
-./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir="." mosquitto.wasm -c mosquitto.conf
+./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir="." src/mosquitto.wasm -c mosquitto.conf
 ```
-Please note: As WASI `getaddrinfo` does not support to not specify the IP protocol version, a warning will be printed by mosquitto when you specify a listener in the config, and it will try to determine the IP protocol version by analyzing the address which usually succeeds. 
+Please note: As WASI `getaddrinfo` does not support to not specify the IP protocol version, a warning will be printed by mosquitto when you specify a listener in the config, and it will try to determine the IP protocol version by analyzing the address which usually succeeds.
+
+## Run the client
+The client can be run as well. However, it is necessary to specify the host of the broker even if it is only locally. The host must be a valid IP address as it currently fails to resolve localhost.
+### Subscribe
+```bash
+./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir="." client/mosquitto_sub.wasm -h 127.0.0.1 -t 'test'
+```
+### Publish
+```bash
+./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir="." client/mosquitto_pub.wasm -h 127.0.0.1 -t 'test' -m "Hello World"
+```

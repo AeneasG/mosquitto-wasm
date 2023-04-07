@@ -15,7 +15,7 @@
 # =============================================================================
 
 # Uncomment to compile the broker with tcpd/libwrap support.
-WITH_WRAP:=no
+#WITH_WRAP:=yes
 
 # Comment out to disable SSL/TLS support in the broker and client.
 # Disabling this will also mean that passwords must be stored in plain text. It
@@ -41,21 +41,21 @@ WITH_BRIDGE:=no
 # allows the broker to store retained messages and durable subscriptions to a
 # file periodically and on shutdown. This is usually desirable (and is
 # suggested by the MQTT spec), but it can be disabled if required.
-WITH_PERSISTENCE:=no
+WITH_PERSISTENCE:=yes
 
 # Comment out to remove memory tracking support from the broker. If disabled,
 # mosquitto won't track heap memory usage nor export '$SYS/broker/heap/current
 # size', but will use slightly less memory and CPU time.
-WITH_MEMORY_TRACKING:=no
+WITH_MEMORY_TRACKING:=yes
 
 # Compile with database upgrading support? If disabled, mosquitto won't
 # automatically upgrade old database versions.
 # Not currently supported.
-WITH_DB_UPGRADE:=no
+#WITH_DB_UPGRADE:=yes
 
 # Comment out to remove publishing of the $SYS topic hierarchy containing
 # information about the broker state.
-WITH_SYS_TREE:=no
+WITH_SYS_TREE:=yes
 
 # Build with systemd support. If enabled, mosquitto will notify systemd after
 # initialization. See README in service/systemd/ for more information.
@@ -76,13 +76,13 @@ WITH_EC:=no
 WITH_DOCS:=no
 
 # Build with client support for SOCK5 proxy.
-WITH_SOCKS:=no
+WITH_SOCKS:=yes
 
 # Strip executables and shared libraries on install.
 WITH_STRIP:=no
 
 # Build static libraries
-WITH_STATIC_LIBRARIES:=no
+WITH_STATIC_LIBRARIES:=yes
 
 # Use this variable to add extra library dependencies when building the clients
 # with the static libmosquitto library. This may be required on some systems
@@ -90,10 +90,10 @@ WITH_STATIC_LIBRARIES:=no
 CLIENT_STATIC_LDADD:=
 
 # Build shared libraries
-WITH_SHARED_LIBRARIES:=yes
+WITH_SHARED_LIBRARIES:=no
 
 # Build with async dns lookup support for bridges (temporary). Requires glibc.
-WITH_ADNS:=no
+#WITH_ADNS:=yes
 
 # Build with epoll support.
 WITH_EPOLL:=no
@@ -111,7 +111,7 @@ WITH_UNIX_SOCKETS:=no
 WITH_CJSON:=no
 
 # Build mosquitto with support for the $CONTROL topics.
-WITH_CONTROL:=no
+WITH_CONTROL:=yes
 
 # Build the broker with the jemalloc allocator
 WITH_JEMALLOC:=no
@@ -139,9 +139,9 @@ DB_HTML_XSL=man/html.xsl
 
 #MANCOUNTRIES=en_GB
 
-UNAME?=$(shell uname -s)
+UNAME:=$(shell uname -s)
 ARCH:=$(shell uname -p)
-TARGET?=x86_64-linux-gnu
+RUNTARGET?=x86_64-linux-gnu
 
 ifeq ($(UNAME),SunOS)
 	ifeq ($(CC),cc)
@@ -152,6 +152,23 @@ ifeq ($(UNAME),SunOS)
 else
 	CFLAGS?=-Wall -ggdb -O2 -Wconversion -Wextra
 endif
+
+ENDING:=
+
+ifeq ($(RUNTARGET), WASI)
+	WAMR_PATH ?= /opt/wasm-micro-runtime
+	WASI_SDK_PATH?= /opt/wasi-sdk
+	CROSS_COMPILE = $(WASI_SDK_PATH)/bin/
+	CC = clang
+	INCS += -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
+    ENDING:=.wasm
+
+	CFLAGS:=${CFLAGS} -Wno-sign-conversion -Wno-unused-variable -Wno-unused-parameter -Wno-visibility -Wno-sign-compare -Wno-unused-function -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID ${INCS}
+    LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=/opt/wasi-sdk/share/wasi-sysroot/share/wasm32-wasi/defined-symbols.txt --sysroot=/opt/wasi-sdk/share/wasi-sysroot/ ${INCS} $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c
+
+    CLIENT_STATIC_LDADD:=$(CLIENT_STATIC_LDADD) -Wl,--no-entry -Wl,--export-all
+endif
+
 
 STATIC_LIB_DEPS:=
 
@@ -166,21 +183,9 @@ LIB_LDFLAGS:=$(LDFLAGS)
 LIB_LIBADD:=$(LIBADD)
 
 BROKER_CPPFLAGS:=$(LIB_CPPFLAGS) -I../lib
+BROKER_CFLAGS:=${CFLAGS} -DVERSION="\"${VERSION}\"" -DWITH_BROKER
+BROKER_LDFLAGS:=${LDFLAGS}
 BROKER_LDADD:=
-ENDING:=
-ifeq ($(TARGET), WASI)
-	WAMR_PATH ?= /opt/wasm-micro-runtime
-	WASI_SDK_PATH?= /opt/wasi-sdk
-	CC = $(WASI_SDK_PATH)/bin/clang
-	INCS += -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
-	BROKER_CFLAGS:=${CFLAGS} -Wno-sign-conversion -Wno-unused-variable -Wno-unused-parameter -Wno-visibility -Wno-sign-compare -Wno-unused-function -DVERSION="\"${VERSION}\"" -DWITH_BROKER -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID ${INCS}
-    BROKER_LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=/opt/wasi-sdk/share/wasi-sysroot/share/wasm32-wasi/defined-symbols.txt --sysroot=/opt/wasi-sdk/share/wasi-sysroot/ ${INCS} $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c
-    ENDING:=.wasm
-else
-	BROKER_CFLAGS:=${CFLAGS} -DVERSION="\"${VERSION}\"" -DWITH_BROKER
-    BROKER_LDFLAGS:=${LDFLAGS}
-endif
-
 
 CLIENT_CPPFLAGS:=$(CPPFLAGS) -I.. -I../include
 CLIENT_CFLAGS:=${CFLAGS} -DVERSION="\"${VERSION}\""
@@ -193,9 +198,13 @@ PLUGIN_CPPFLAGS:=$(CPPFLAGS) -I../.. -I../../include
 PLUGIN_CFLAGS:=$(CFLAGS) -fPIC
 PLUGIN_LDFLAGS:=$(LDFLAGS)
 
+ifeq ($(RUNTARGET), WASI)
+	PLUGIN_LDFLAGS:=$(PLUGIN_LDFLAGS) -Wl,--no-entry -Wl,--export-all -Wl,--allow-undefined
+endif
+
 ifneq ($(or $(findstring $(UNAME),FreeBSD), $(findstring $(UNAME),OpenBSD), $(findstring $(UNAME),NetBSD)),)
 	BROKER_LDADD:=$(BROKER_LDADD) -lm
-	ifneq ($(TARGET),WASI)
+	ifneq ($(RUNTARGET),WASI)
 		BROKER_LDFLAGS:=$(BROKER_LDFLAGS) -Wl,--dynamic-list=linker.syms
 	endif
 	SEDINPLACE:=-i ""
@@ -206,7 +215,7 @@ endif
 
 ifeq ($(UNAME),Linux)
 	BROKER_LDADD:=$(BROKER_LDADD) -lrt
-	ifneq ($(TARGET),WASI)
+	ifneq ($(RUNTARGET),WASI)
 		BROKER_LDFLAGS:=$(BROKER_LDFLAGS) -Wl,--dynamic-list=linker.syms
 	endif
 	LIB_LIBADD:=$(LIB_LIBADD) -lrt
@@ -240,7 +249,9 @@ else
 endif
 
 ifneq ($(UNAME),SunOS)
-	LIB_LDFLAGS:=$(LIB_LDFLAGS) -Wl,--version-script=linker.version -Wl,-soname,libmosquitto.so.$(SOVERSION)
+	ifneq ($(RUNTARGET),WASI)
+		LIB_LDFLAGS:=$(LIB_LDFLAGS) -Wl,--version-script=linker.version -Wl,-soname,libmosquitto.so.$(SOVERSION)
+	endif
 endif
 
 ifeq ($(UNAME),QNX)
