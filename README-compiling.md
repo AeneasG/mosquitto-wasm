@@ -93,7 +93,7 @@ To run it locally, you can for example run
 ```
 To run with config, you should first tell the wasm runtime that mosquitto has the right to access the config file and then tell mosquitto the location of the config file
 ```bash
-./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir="." src/mosquitto.wasm -c mosquitto.conf
+./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir=. src/mosquitto.wasm -c mosquitto.conf
 ```
 Please note: As WASI `getaddrinfo` does not support to not specify the IP protocol version, a warning will be printed by mosquitto when you specify a listener in the config, and it will try to determine the IP protocol version by analyzing the address which usually succeeds.
 
@@ -101,9 +101,9 @@ Please note: As WASI `getaddrinfo` does not support to not specify the IP protoc
 The client can be run as well using the following commands:
 ### Subscribe
 ```bash
-./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir="." client/mosquitto_sub.wasm -t 'test'
+./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 client/mosquitto_sub.wasm -t 'test'
 ```
 ### Publish
 ```bash
-./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir="." client/mosquitto_pub.wasm -t 'test' -m "Hello World"
+./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 client/mosquitto_pub.wasm -t 'test' -m "Hello World"
 ```
