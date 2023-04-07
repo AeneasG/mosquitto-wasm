@@ -28,6 +28,7 @@ Contributors:
 #define _GNU_SOURCE
 
 #ifdef __wasi__
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <wasi_socket_ext.h>
@@ -406,8 +407,33 @@ static int net__try_connect_tcp(const char *host, uint16_t port, mosq_sock_t *so
 
 	*sock = INVALID_SOCKET;
 	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
+    hints.ai_socktype = SOCK_STREAM;
+#ifdef __wasi__
+    printf("WASI does not support socket_domain AF_UNSPEC. Trying to determine address type of %s\n", host);
+    if (inet_pton(AF_INET, host, &(hints.ai_addr)) == 1) {
+        hints.ai_family = AF_INET;
+    } else if (inet_pton(AF_INET6, host, &(hints.ai_addr)) == 1) {
+        hints.ai_family = AF_INET6;
+    } else {
+        printf("Failed to determine address type of %s, will try out now...\n", host);
+        hints.ai_family = AF_INET6;
+        int tryout = getaddrinfo(host, NULL, &hints, &ainfo);
+        if(tryout){
+            hints.ai_family = AF_INET;
+            tryout = getaddrinfo(host, NULL, &hints, &ainfo);
+            if(tryout){
+                printf("Nor IPv4 nor IPv6 connect has been successful, aborting\n");
+                return MOSQ_ERR_EAI;
+            } else {
+                printf("Successfully connected to %s with IPv4\n", host);
+            }
+        } else {
+            printf("Successfully connected to %s with IPv6\n", host);
+        }
+    }
+#else
+    hints.ai_family = AF_UNSPEC;
+#endif
 
 	s = getaddrinfo(host, NULL, &hints, &ainfo);
 	if(s){

@@ -98,12 +98,12 @@ To run with config, you should first tell the wasm runtime that mosquitto has th
 Please note: As WASI `getaddrinfo` does not support to not specify the IP protocol version, a warning will be printed by mosquitto when you specify a listener in the config, and it will try to determine the IP protocol version by analyzing the address which usually succeeds.
 
 ## Run the client
-The client can be run as well. However, it is necessary to specify the host of the broker even if it is only locally. The host must be a valid IP address as it currently fails to resolve localhost.
+The client can be run as well using the following commands:
 ### Subscribe
 ```bash
-./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir="." client/mosquitto_sub.wasm -h 127.0.0.1 -t 'test'
+./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir="." client/mosquitto_sub.wasm -t 'test'
 ```
 ### Publish
 ```bash
-./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir="." client/mosquitto_pub.wasm -h 127.0.0.1 -t 'test' -m "Hello World"
+./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir="." client/mosquitto_pub.wasm -t 'test' -m "Hello World"
 ```
