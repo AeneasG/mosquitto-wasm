@@ -716,12 +716,9 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
     }
 
     if(listener->socket_domain){
-        log__printf(NULL, MOSQ_LOG_DEBUG, "we have a socket_domain which is %d", listener->socket_domain);
         hints.ai_family = listener->socket_domain;
         rc = getaddrinfo(listener->host, service, &hints, &ainfo);
     } else {
-        log__printf(NULL, MOSQ_LOG_DEBUG, "no socket_domain");
-
         struct addrinfo *ainfoIpV4, *ainfoIpV6;
         hints.ai_family = AF_INET;
         int tryIpV4 = getaddrinfo(listener->host, service, &hints, &ainfoIpV4);

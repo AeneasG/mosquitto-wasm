@@ -408,34 +408,40 @@ static int net__try_connect_tcp(const char *host, uint16_t port, mosq_sock_t *so
 	*sock = INVALID_SOCKET;
 	memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_socktype = SOCK_STREAM;
+
 #ifdef __wasi__
-    printf("WASI does not support socket_domain AF_UNSPEC. Trying to determine address type of %s\n", host);
-    if (inet_pton(AF_INET, host, &(hints.ai_addr)) == 1) {
-        hints.ai_family = AF_INET;
-    } else if (inet_pton(AF_INET6, host, &(hints.ai_addr)) == 1) {
-        hints.ai_family = AF_INET6;
-    } else {
-        printf("Failed to determine address type of %s, will try out now...\n", host);
-        hints.ai_family = AF_INET6;
-        int tryout = getaddrinfo(host, NULL, &hints, &ainfo);
-        if(tryout){
-            hints.ai_family = AF_INET;
-            tryout = getaddrinfo(host, NULL, &hints, &ainfo);
-            if(tryout){
-                printf("Nor IPv4 nor IPv6 connect has been successful, aborting\n");
-                return MOSQ_ERR_EAI;
-            } else {
-                printf("Successfully connected to %s with IPv4\n", host);
-            }
-        } else {
-            printf("Successfully connected to %s with IPv6\n", host);
+    if(host == NULL){
+        host = "localhost";
+    }
+
+    struct addrinfo *ainfoIpV4, *ainfoIpV6;
+    hints.ai_family = AF_INET;
+    int tryIpV4 = getaddrinfo(host, NULL, &hints, &ainfoIpV4);
+    hints.ai_family = AF_INET6;
+    int tryIpV6 = getaddrinfo(host, NULL, &hints, &ainfoIpV6);
+    if(tryIpV6 == 0 && tryIpV4 == 0) {
+        ainfo = ainfoIpV4;
+        rp = ainfo;
+        // combine ainfoIpV4 and ainfoIpV6 into ainfo
+        while(rp->ai_next != NULL) {
+            rp = rp ->ai_next;
         }
+        rp->ai_next = ainfoIpV6;
+        s = tryIpV6;
+    } else if(tryIpV6 == 0) {
+        ainfo = ainfoIpV6;
+        s = tryIpV6;
+    } else if(tryIpV4 == 0) {
+        ainfo = ainfoIpV4;
+        s = tryIpV4;
+    } else {
+        s = INVALID_SOCKET;
     }
 #else
     hints.ai_family = AF_UNSPEC;
+    s = getaddrinfo(host, NULL, &hints, &ainfo);
 #endif
 
-	s = getaddrinfo(host, NULL, &hints, &ainfo);
 	if(s){
 		errno = s;
 		return MOSQ_ERR_EAI;
