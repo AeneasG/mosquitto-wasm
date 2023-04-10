@@ -69,7 +69,7 @@ TESTS = ${SRC:.c=.test}
 all : ${TESTS}
 
 ${TESTS} : %.test: %.c
-	$(CC) $< -o $@ $(CFLAGS) $(LIBS)
+	${CROSS_COMPILE}$(CC) $< -o $@ $(CFLAGS) $(LIBS)
 
 reallyclean : clean
 	-rm -f *.orig

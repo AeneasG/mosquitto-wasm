@@ -42,7 +42,7 @@ make RUNTARGET=WASI test
 ### Current state of the tests
 * broker: Test that don't pass, are commented out
 * client: Tests work in general
-* lib: Tests are not yet working
+* lib: Tests are not yet working as shared library seems to be not building correctly.  
 * old: not covered / might be working or not
 * random: not yet covered
 * ssl: not yet covered

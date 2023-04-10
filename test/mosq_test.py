@@ -42,7 +42,7 @@ def start_broker(filename, cmd=None, port=0, use_conf=False, expect_fail=False, 
         elif cmd is None and port == 0:
             port = 1888
             if wasm:
-                cmd = ['../../mosquitto/src/iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.wasm', '-v', '-c', filename.replace('.py', '.conf')]
+                cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.wasm', '-v', '-c', filename.replace('.py', '.conf')]
             else:
                 cmd = ['../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
 
@@ -87,6 +87,8 @@ def start_client(filename, cmd, env, port=1888):
         raise ValueError
     if os.environ.get('MOSQ_USE_VALGRIND') is not None:
         cmd = ['valgrind', '-q', '--log-file='+filename+'.vglog'] + cmd
+    if wasm:
+        cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', ] + cmd
 
     cmd = cmd + [str(port)]
     return subprocess.Popen(cmd, env=env)
