@@ -164,7 +164,7 @@ ifeq ($(RUNTARGET), WASI)
     ENDING:=.wasm
 
 	CFLAGS:=${CFLAGS} -Wno-sign-conversion -Wno-unused-variable -Wno-unused-parameter -Wno-visibility -Wno-sign-compare -Wno-unused-function -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID ${INCS}
-    LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=/opt/wasi-sdk/share/wasi-sysroot/share/wasm32-wasi/defined-symbols.txt --sysroot=/opt/wasi-sdk/share/wasi-sysroot/ ${INCS} $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c
+    LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=/opt/wasi-sdk/share/wasi-sysroot/share/wasm32-wasi/defined-symbols.txt --sysroot=/opt/wasi-sdk/share/wasi-sysroot/ ${INCS}
 
     CLIENT_STATIC_LDADD:=$(CLIENT_STATIC_LDADD) -Wl,--no-entry -Wl,--export-all
 endif
@@ -200,6 +200,8 @@ PLUGIN_LDFLAGS:=$(LDFLAGS)
 
 ifeq ($(RUNTARGET), WASI)
 	PLUGIN_LDFLAGS:=$(PLUGIN_LDFLAGS) -Wl,--no-entry -Wl,--export-all -Wl,--allow-undefined
+	BROKER_LDFLAGS:=$(BROKER_LDFLAGS) $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c
+	CLIENT_LDFLAGS:=$(CLIENT_LDFLAGS) $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c
 endif
 
 ifneq ($(or $(findstring $(UNAME),FreeBSD), $(findstring $(UNAME),OpenBSD), $(findstring $(UNAME),NetBSD)),)

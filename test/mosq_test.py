@@ -13,7 +13,7 @@ import __main__
 import atexit
 vg_index = 1
 vg_logfiles = []
-wasi=True
+wasm=True
 
 class TestError(Exception):
     def __init__(self, message="Mismatched packets"):
@@ -26,7 +26,7 @@ def start_broker(filename, cmd=None, port=0, use_conf=False, expect_fail=False, 
     delay = 0.1
 
     if use_conf == True:
-        if wasi:
+        if wasm:
             cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.wasm', '-v', '-c', filename.replace('.py', '.conf')]
         else:
             cmd = ['../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
@@ -35,13 +35,13 @@ def start_broker(filename, cmd=None, port=0, use_conf=False, expect_fail=False, 
             port = 1888
     else:
         if cmd is None and port != 0:
-            if wasi:
+            if wasm:
                 cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.wasm', '-v', '-p', str(port)]
             else:
                 cmd = ['../../src/mosquitto', '-v', '-p', str(port)]
         elif cmd is None and port == 0:
             port = 1888
-            if wasi:
+            if wasm:
                 cmd = ['../../mosquitto/src/iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.wasm', '-v', '-c', filename.replace('.py', '.conf')]
             else:
                 cmd = ['../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
