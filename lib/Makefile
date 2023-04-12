@@ -93,7 +93,7 @@ clean :
 	$(MAKE) -C cpp clean
 
 libmosquitto.so.${SOVERSION} : ${MOSQ_OBJS}
-ifeq ($(RUNTARGET), WASI)
+ifeq ($(RUNTARGET), WASM)
 	${CROSS_COMPILE}$(CC) -nostdlib -Wl,--shared $(LIB_LDFLAGS) $^ -o $@ ${LIB_LIBADD}
 else
 	${CROSS_COMPILE}$(CC) -shared $(LIB_LDFLAGS) $^ -o $@ ${LIB_LIBADD}

@@ -36,7 +36,7 @@ Regarding the other tests, you can set the flag `wasm` in `test/mosq_test.py` to
 
 Then, run the tests using
 ```bash
-make RUNTARGET=WASI test
+make RUNTARGET=WASM test
 ```
 
 ## Current state of the tests in WASM

@@ -155,7 +155,7 @@ endif
 
 ENDING:=
 
-ifeq ($(RUNTARGET), WASI)
+ifeq ($(RUNTARGET), WASM)
 	WAMR_PATH ?= /opt/wasm-micro-runtime
 	WASI_SDK_PATH?= /opt/wasi-sdk
 	CROSS_COMPILE = $(WASI_SDK_PATH)/bin/
@@ -200,7 +200,7 @@ PLUGIN_CPPFLAGS:=$(CPPFLAGS) -I../.. -I../../include
 PLUGIN_CFLAGS:=$(CFLAGS) -fPIC
 PLUGIN_LDFLAGS:=$(LDFLAGS)
 
-ifeq ($(RUNTARGET), WASI)
+ifeq ($(RUNTARGET), WASM)
 	PLUGIN_LDFLAGS:=$(PLUGIN_LDFLAGS) -Wl,--no-entry -Wl,--export-all -Wl,--allow-undefined
 	BROKER_LDFLAGS:=$(BROKER_LDFLAGS) $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c
 	CLIENT_LDFLAGS:=$(CLIENT_LDFLAGS) $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c
@@ -208,7 +208,7 @@ endif
 
 ifneq ($(or $(findstring $(UNAME),FreeBSD), $(findstring $(UNAME),OpenBSD), $(findstring $(UNAME),NetBSD)),)
 	BROKER_LDADD:=$(BROKER_LDADD) -lm
-	ifneq ($(RUNTARGET),WASI)
+	ifneq ($(RUNTARGET), WASM)
 		BROKER_LDFLAGS:=$(BROKER_LDFLAGS) -Wl,--dynamic-list=linker.syms
 	endif
 	SEDINPLACE:=-i ""
@@ -219,7 +219,7 @@ endif
 
 ifeq ($(UNAME),Linux)
 	BROKER_LDADD:=$(BROKER_LDADD) -lrt
-	ifneq ($(RUNTARGET),WASI)
+	ifneq ($(RUNTARGET), WASM)
 		BROKER_LDFLAGS:=$(BROKER_LDFLAGS) -Wl,--dynamic-list=linker.syms
 	endif
 	LIB_LIBADD:=$(LIB_LIBADD) -lrt
@@ -253,7 +253,7 @@ else
 endif
 
 ifneq ($(UNAME),SunOS)
-	ifneq ($(RUNTARGET),WASI)
+	ifneq ($(RUNTARGET), WASM)
 		LIB_LDFLAGS:=$(LIB_LDFLAGS) -Wl,--version-script=linker.version -Wl,-soname,libmosquitto.so.$(SOVERSION)
 	endif
 endif
@@ -286,7 +286,7 @@ ifeq ($(WITH_TLS),yes)
 endif
 
 ifeq ($(WITH_THREADING),yes)
-	ifeq ($(RUNTARGET), WASI)
+	ifeq ($(RUNTARGET), WASM)
 		LIB_LDFLAGS:=$(LIB_LDFLAGS) -lpthread
 		STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lpthread
 	else
