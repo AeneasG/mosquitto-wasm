@@ -29,7 +29,7 @@ WITH_TLS:=no
 WITH_TLS_PSK:=no
 
 # Comment out to disable client threading support.
-WITH_THREADING:=no
+WITH_THREADING:=yes
 
 # Comment out to remove bridge support from the broker. This allow the broker
 # to connect to other brokers and subscribe/publish to topics. You probably
@@ -164,9 +164,11 @@ ifeq ($(RUNTARGET), WASI)
     ENDING:=.wasm
 
 	CFLAGS:=${CFLAGS} -Wno-sign-conversion -Wno-unused-variable -Wno-unused-parameter -Wno-visibility -Wno-sign-compare -Wno-unused-function -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID ${INCS}
-    LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=/opt/wasi-sdk/share/wasi-sysroot/share/wasm32-wasi/defined-symbols.txt --sysroot=/opt/wasi-sdk/share/wasi-sysroot/ ${INCS}
+	ifeq ($(WITH_THREADING), yes)
+		CFLAGS:=${CFLAGS} --target=wasm32-wasi-threads
+	endif
 
-    CLIENT_STATIC_LDADD:=$(CLIENT_STATIC_LDADD) -Wl,--no-entry -Wl,--export-all
+    LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=$(WASI_SDK_PATH)/share/wasi-sysroot/share/wasm32-wasi-threads/defined-symbols.txt --sysroot=/opt/wasi-sdk/share/wasi-sysroot/ ${INCS}
 endif
 
 
@@ -284,10 +286,15 @@ ifeq ($(WITH_TLS),yes)
 endif
 
 ifeq ($(WITH_THREADING),yes)
-	LIB_LDFLAGS:=$(LIB_LDFLAGS) -pthread
+	ifeq ($(RUNTARGET), WASI)
+		LIB_LDFLAGS:=$(LIB_LDFLAGS) -lpthread
+		STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lpthread
+	else
+		LIB_LDFLAGS:=$(LIB_LDFLAGS) -pthread
+		STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -pthread
+	endif
 	LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_THREADING
 	CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_THREADING
-	STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -pthread
 endif
 
 ifeq ($(WITH_SOCKS),yes)

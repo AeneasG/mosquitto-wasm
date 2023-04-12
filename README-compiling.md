@@ -57,7 +57,6 @@ Currently, known options that are not supported or not tested are:
 * `WITH_WRAP`
 * `WITH_TLS`
 * `WITH_TLS_PSK`
-* `WITH_THREADING`
 * `WITH_BRIDGE`
 * `WITH_DB_UPGRADE`
 * `WITH_SYSTEMD`
