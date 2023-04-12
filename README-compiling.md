@@ -68,6 +68,10 @@ Currently, known options that are not supported or not tested are:
 * `WITH_UNIX_SOCKETS` (no support in WASI)
 * `WITH_JEMALLOC` (must provide JEMALLOC WASI library)
 
+Additionally, the following features are not supported / are not working
+* Signal handling
+* plugin loading
+
 Known options, that are supported
 * `WITH_THREADING`
 * `WITH_PERSISTENCE`

@@ -29,7 +29,7 @@ and may be unsuitable on e.g. a Raspberry Pi.
 
 The tests require Python 3 and CUnit to be installed.
 
-## Run tests WASM
+# Run tests WASM
 There are various adaptations of the test suite to run with WASM. Currently, Unit Tests cannot be compiled as the `CUnit` library depends on `setjmp` which is not supported by WASI. However, there is work in progress and maybe soon, we can also run unit tests in WASM.
 
 Regarding the other tests, you can set the flag `wasm` in `test/mosq_test.py` to `True` to run tests with a WASM broker. Note, that this assumes that you have a `WAMR` runtime called `iwasm` in the root of this repository.
@@ -39,10 +39,10 @@ Then, run the tests using
 make RUNTARGET=WASI test
 ```
 
-### Current state of the tests
+## Current state of the tests in WASM
 * broker: Test that don't pass, are commented out
 * client: Tests work in general
-* lib: Tests are not yet working as shared library seems to be not building correctly.  
+* lib: Tests are not yet working: use static instead of shared library; if without threading a few work, with threading none work (timeout)
 * old: not covered / might be working or not
 * random: not yet covered
 * ssl: not yet covered
