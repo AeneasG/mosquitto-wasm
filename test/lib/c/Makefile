@@ -3,7 +3,12 @@ include ../../../config.mk
 .PHONY: all clean reallyclean
 
 CFLAGS=-I../../../include -Werror
+# use static lib for WASI
+ifeq ($(RUNTARGET), WASI)
+LIBS=-I../../../lib -L../../../lib -lmosquitto $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c -I/opt/wasm-micro-runtime/core/iwasm/libraries/lib-socket/inc
+else
 LIBS=../../../lib/libmosquitto.so.1
+endif
 
 SRC = \
 	01-con-discon-success.c \

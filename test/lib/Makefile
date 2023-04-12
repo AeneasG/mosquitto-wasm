@@ -12,9 +12,15 @@ check : test
 ptest : test-compile
 	./test.py
 
+ifeq ($(RUNTARGET),WASI)
+test : c
+
+test-compile : test-compile-c
+else
 test : c cpp
 
 test-compile : test-compile-c test-compile-cpp
+endif
 
 test-compile-c :
 	$(MAKE) -C c
