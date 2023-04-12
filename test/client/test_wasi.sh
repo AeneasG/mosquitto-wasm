@@ -39,9 +39,9 @@ kill ${SUB_PID} 2>/dev/null || true
 echo "File publish ok"
 
 # Publish a file from stdin and subscribe, do we get at least that many lines?
-export TEST_LINES=$(wc -l test_wasi.sh | cut -d' ' -f1)
-../../iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir=. ${BASE_PATH}/client/mosquitto_sub.wasm -p ${PORT} -W ${SUB_TIMEOUT} -C ${TEST_LINES} -t 'file-publish' >/dev/null &
-export SUB_PID=$!
-../../iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir=. ${BASE_PATH}/client/mosquitto_pub.wasm -p ${PORT} -t 'file-publish' -l < ./test_wasi.sh
-kill ${SUB_PID} 2>/dev/null || true
-echo "stdin publish ok"
+#export TEST_LINES=$(wc -l test_wasi.sh | cut -d' ' -f1)
+#../../iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir=. ${BASE_PATH}/client/mosquitto_sub.wasm -p ${PORT} -W ${SUB_TIMEOUT} -C ${TEST_LINES} -t 'file-publish' >/dev/null &
+#export SUB_PID=$!
+#../../iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 --dir=. ${BASE_PATH}/client/mosquitto_pub.wasm -p ${PORT} -t 'file-publish' -l < ./test_wasi.sh
+#kill ${SUB_PID} 2>/dev/null || true
+echo "stdin publish not supported in WASM, skipped!"
