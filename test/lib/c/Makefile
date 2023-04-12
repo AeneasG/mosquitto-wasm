@@ -69,6 +69,10 @@ SRC += \
 LIBS += -lssl -lcrypto
 endif
 
+ifeq ($(WITH_THREADING),yes)
+CFLAGS += --target=wasm32-wasi-threads
+endif
+
 TESTS = ${SRC:.c=.test}
 
 all : ${TESTS}

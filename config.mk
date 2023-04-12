@@ -29,7 +29,7 @@ WITH_TLS:=no
 WITH_TLS_PSK:=no
 
 # Comment out to disable client threading support.
-WITH_THREADING:=yes
+WITH_THREADING:=no
 
 # Comment out to remove bridge support from the broker. This allow the broker
 # to connect to other brokers and subscribe/publish to topics. You probably
