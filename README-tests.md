@@ -44,6 +44,6 @@ make RUNTARGET=WASM test
 * client: Tests work in general; not possible from stdinput
 * lib: Tests are working (if compiled without THREADING): use static instead of shared library; two async qos tests fail and are removed for WASM
 * old: not covered / might be working or not
-* random: not yet covered
+* random: not working out of the box as plugin and websocket support is missing; can made be running but is not a clear test case anyway
 * ssl: not yet covered
 * unit: tests are not yet working due to missing working version of CUnit in WASM

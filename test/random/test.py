@@ -38,9 +38,12 @@ def run_clients(max_clients):
                 c.terminate()
                 c.wait()
 
-
+wasm = False
 env = {}
 env["LD_LIBRARY_PATH"] = "../../lib"
 
-#broker = subprocess.Popen(["../../src/mosquitto", "-c", "random.conf"], env=env)
+# if wasm:
+#      broker = subprocess.Popen(['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.wasm', "-c", "random.conf"], env=env)
+# else :
+#     broker = subprocess.Popen(["../../src/mosquitto", "-c", "random.conf"], env=env)
 run_clients(1000)
