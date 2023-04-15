@@ -1,3 +1,5 @@
+include ../../../config.mk
+
 .PHONY: all test clean reallyclean
 
 CFLAGS=-I../../../include -Wall -Werror
@@ -33,11 +35,20 @@ TESTS = ${SRC:.c=.test}
 all : ${PLUGINS} ${TESTS}
 
 ${PLUGINS} : %.so: %.c
+ifeq ($(RUNTARGET), WASM)
+	# TODO fix plugin build
+else
 	$(CC) ${CFLAGS} -fPIC -shared $< -o $@
+endif	
 
 
 ${TESTS} : %.test: %.c
+ifeq ($(RUNTARGET), WASM)
+	# TODO use static library instead of shared library and export the needed stuff
+	# $(CROSS_COMPILE)$(CC) ${CFLAGS} $< -o $@ -I../../../lib -L../../../lib -lmosquitto
+else
 	$(CC) ${CFLAGS} $< -o $@ ../../../lib/libmosquitto.so.1
+endif
 
 
 reallyclean : clean

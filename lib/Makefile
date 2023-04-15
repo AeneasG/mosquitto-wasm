@@ -49,7 +49,10 @@ MOSQ_OBJS=mosquitto.o \
 ALL_DEPS:=
 
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
+# TODO probably revert this
+ifneq ($(RUNTARGET), WASM)
 	ALL_DEPS+=libmosquitto.so.${SOVERSION}
+endif
 endif
 
 ifeq ($(WITH_STATIC_LIBRARIES),yes)
@@ -58,14 +61,18 @@ endif
 
 all : ${ALL_DEPS}
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
+ifneq ($(RUNTARGET), WASM)
 	$(MAKE) -C cpp
+endif
 endif
 
 install : all
 	$(INSTALL) -d "${DESTDIR}${libdir}/"
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
+ifneq ($(RUNTARGET), WASM)
 	$(INSTALL) ${STRIP_OPTS} libmosquitto.so.${SOVERSION} "${DESTDIR}${libdir}/libmosquitto.so.${SOVERSION}"
 	ln -sf libmosquitto.so.${SOVERSION} "${DESTDIR}${libdir}/libmosquitto.so"
+endif
 endif
 ifeq ($(WITH_STATIC_LIBRARIES),yes)
 	$(INSTALL) ${STRIP_OPTS} libmosquitto.a "${DESTDIR}${libdir}/libmosquitto.a"
@@ -77,7 +84,9 @@ endif
 	$(INSTALL) -m644 ../libmosquitto.pc.in "${DESTDIR}${libdir}/pkgconfig/libmosquitto.pc"
 	sed ${SEDINPLACE} -e "s#@CMAKE_INSTALL_PREFIX@#${prefix}#" -e "s#@VERSION@#${VERSION}#" "${DESTDIR}${libdir}/pkgconfig/libmosquitto.pc"
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
+ifneq ($(RUNTARGET), WASM)
 	$(MAKE) -C cpp install
+endif
 endif
 
 uninstall :

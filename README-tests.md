@@ -40,7 +40,7 @@ make RUNTARGET=WASM test
 ```
 
 ## Current state of the tests in WASM
-* broker: Test that don't pass, are commented out
+* broker: Most tests pass, some not (especially related to plugin, invalid-utf8 and long topics)
 * client: Tests work in general; not possible from stdinput
 * lib: Tests are working (if compiled without THREADING): use static instead of shared library; two async qos tests fail and are removed for WASM
 * old: not covered / might be working or not
