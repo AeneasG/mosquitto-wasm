@@ -11,7 +11,7 @@ endif
 all : auth_plugin.so
 
 auth_plugin.so : auth_plugin.c
-	$(CC) ${CFLAGS} -fPIC -shared $< -o $@ -I../../lib -I../../src
+	$(CROSS_COMPILE)$(CC) ${CFLAGS} -fPIC -shared $< -o $@ -I../../lib -I../../src
 
 ../lib/libmosquitto.so.${SOVERSION} :
 	$(MAKE) -C ../../lib
