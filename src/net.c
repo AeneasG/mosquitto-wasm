@@ -722,6 +722,11 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
         struct addrinfo *ainfoIpV4, *ainfoIpV6;
         hints.ai_family = AF_INET;
         int tryIpV4 = getaddrinfo(listener->host, service, &hints, &ainfoIpV4);
+		// IPv4 getaddrinfo can return multiple addresses, but we only want the first one
+		if(tryIpV4 == 0 && ainfoIpV4->ai_next != NULL) {
+			freeaddrinfo(ainfoIpV4->ai_next);
+			ainfoIpV4->ai_next = NULL;
+		}
         hints.ai_family = AF_INET6;
         int tryIpV6 = getaddrinfo(listener->host, service, &hints, &ainfoIpV6);
         if(tryIpV6 == 0 && tryIpV4 == 0) {
