@@ -41,8 +41,8 @@ make RUNTARGET=WASM test
 
 ## Current state of the tests in WASM
 * broker: Test that don't pass, are commented out
-* client: Tests work in general
-* lib: Tests are not yet working: use static instead of shared library; if without threading a few work, with threading none work (timeout)
+* client: Tests work in general; not possible from stdinput
+* lib: Tests are working (if compiled without THREADING): use static instead of shared library; two async qos tests fail and are removed for WASM
 * old: not covered / might be working or not
 * random: not yet covered
 * ssl: not yet covered

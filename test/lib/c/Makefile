@@ -19,8 +19,6 @@ SRC = \
 	01-will-set.c \
 	01-will-unpwd-set.c \
 	02-subscribe-qos0.c \
-	02-subscribe-qos1-async1.c \
-	02-subscribe-qos1-async2.c \
 	02-subscribe-qos1.c \
 	02-subscribe-qos2.c \
 	02-unsubscribe-multiple-v5.c \
@@ -70,7 +68,12 @@ LIBS += -lssl -lcrypto
 endif
 
 ifeq ($(WITH_THREADING),yes)
-CFLAGS += --target=wasm32-wasi-threads
+	SRC += \
+		02-subscribe-qos1-async1.c \
+		02-subscribe-qos1-async2.c
+	ifeq ($(RUNTARGET), WASM)
+		CFLAGS += --target=wasm32-wasi-threads
+	endif
 endif
 
 TESTS = ${SRC:.c=.test}

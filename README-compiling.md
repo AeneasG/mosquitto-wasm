@@ -70,10 +70,13 @@ Currently, known options that are not supported or not tested are:
 
 Additionally, the following features are not supported / are not working
 * Signal handling
-* plugin loading
+* Plugin loading
+* Build the shared library (shared library building is not yet supported by [WASI-SDK](https://github.com/WebAssembly/wasi-sdk#notable-limitations))
+
+Experimental options
+* `WITH_THREADING`: App compiles but might behave unexpected, e.g. tests are not able to compile and run
 
 Known options, that are supported
-* `WITH_THREADING`
 * `WITH_PERSISTENCE`
 * `WITH_MEMORY_TRACKING`
 * `WITH_SYS_TREE`
