@@ -43,6 +43,11 @@ typedef SSIZE_T ssize_t;
 #  ifndef EINPROGRESS
 #    define EINPROGRESS WSAEINPROGRESS
 #  endif
+#elif __wasi__
+#  define COMPAT_CLOSE(a) shutdown(a, SHUT_RDWR)
+#  define COMPAT_ECONNRESET ECONNRESET
+#  define COMPAT_EINTR EINTR
+#  define COMPAT_EWOULDBLOCK EWOULDBLOCK
 #else
 #  define COMPAT_CLOSE(a) close(a)
 #  define COMPAT_ECONNRESET ECONNRESET
