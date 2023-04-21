@@ -420,7 +420,7 @@ int client_config_load(struct mosq_config *cfg, int pub_or_sub, int argc, char *
 			cfg->session_expiry_interval = UINT32_MAX;
 		}
 		if(cfg->session_expiry_interval > 0){
-			if(cfg->session_expiry_interval == UINT32_MAX && (cfg->id_prefix || !cfg->id)){
+			if(((unsigned long) (cfg->session_expiry_interval)) == UINT32_MAX && (cfg->id_prefix || !cfg->id)){
 				fprintf(stderr, "Error: You must provide a client id if you are using an infinite session expiry interval.\n");
 				return 1;
 			}
@@ -1206,7 +1206,7 @@ int client_config_line_proc(struct mosq_config *cfg, int pub_or_sub, int argc, c
 						fprintf(stderr, "Error: session-expiry-interval not a number.\n\n");
 						return 1;
 					}
-					if(cfg->session_expiry_interval > UINT32_MAX || cfg->session_expiry_interval < -1){
+					if(((unsigned long) (cfg->session_expiry_interval)) > UINT32_MAX || cfg->session_expiry_interval < -1){
 						fprintf(stderr, "Error: session-expiry-interval out of range.\n\n");
 						return 1;
 					}

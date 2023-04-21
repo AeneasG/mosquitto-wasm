@@ -163,7 +163,7 @@ ifeq ($(RUNTARGET), WASM)
 	INCS += -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
     ENDING:=.wasm
 
-	CFLAGS:=${CFLAGS} -Wno-sign-conversion -Wno-unused-variable -Wno-unused-parameter -Wno-visibility -Wno-sign-compare -Wno-unused-function -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID ${INCS}
+	CFLAGS:=${CFLAGS} -Wno-sign-conversion -Wno-unused-function -Wno-unused-parameter -Wno-unused-but-set-variable -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID ${INCS}
 	ifeq ($(WITH_THREADING), yes)
 		CFLAGS:=${CFLAGS} --target=wasm32-wasi-threads
 	endif

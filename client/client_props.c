@@ -181,7 +181,7 @@ int cfg_parse_property(struct mosq_config *cfg, int argc, char *argv[], int *idx
 			break;
 		case MQTT_PROP_TYPE_INT32:
 			tmpl = atol(value);
-			if(tmpl < 0 || tmpl > UINT32_MAX){
+			if(tmpl < 0 || (unsigned long) tmpl > UINT32_MAX){
 				fprintf(stderr, "Error: Property value (%ld) out of range for property %s.\n\n", tmpl, propname);
 				return MOSQ_ERR_INVAL;
 			}
@@ -189,7 +189,7 @@ int cfg_parse_property(struct mosq_config *cfg, int argc, char *argv[], int *idx
 			break;
 		case MQTT_PROP_TYPE_VARINT:
 			tmpl = atol(value);
-			if(tmpl < 0 || tmpl > UINT32_MAX){
+			if(tmpl < 0 || (unsigned long) tmpl > UINT32_MAX){
 				fprintf(stderr, "Error: Property value (%ld) out of range for property %s.\n\n", tmpl, propname);
 				return MOSQ_ERR_INVAL;
 			}

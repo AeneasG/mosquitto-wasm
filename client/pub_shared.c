@@ -101,7 +101,7 @@ int load_file(const char *filename)
 	cfg.pub_mode = MSGMODE_FILE;
 	fseek(fptr, 0, SEEK_END);
 	flen = ftell(fptr);
-	if(flen > MQTT_MAX_PAYLOAD){
+	if(flen >= 0 && (unsigned long)flen > MQTT_MAX_PAYLOAD){
 		fclose(fptr);
 		err_printf(&cfg, "Error: File must be less than %u bytes.\n\n", MQTT_MAX_PAYLOAD);
 		free(cfg.message);

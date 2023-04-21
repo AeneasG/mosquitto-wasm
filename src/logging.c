@@ -190,7 +190,9 @@ DltLogLevelType get_dlt_level(unsigned int priority)
 static int log__vprintf(unsigned int priority, const char *fmt, va_list va)
 {
 	const char *topic;
+#ifndef __wasi__
 	int syslog_priority;
+#endif
 	char log_line[1000];
 	size_t log_line_pos;
 #ifdef WIN32

@@ -67,7 +67,7 @@ static void loop_handle_reads_writes(void);
 
 static struct pollfd *pollfds = NULL;
 static size_t pollfd_max, pollfd_current_max;
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__wasi__)
 static sigset_t my_sigblock;
 #endif
 
@@ -202,7 +202,7 @@ int mux_poll__handle(struct mosquitto__listener_sock *listensock, int listensock
 	struct mosquitto *context;
 	int i;
 	int fdcount;
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__wasi__)
 	sigset_t origsig;
 #endif
 
