@@ -14,6 +14,7 @@ def write_config(filename, port, per_listener):
         f.write("acl_file %s\n" % (filename.replace('.conf', '.acl')))
         f.write("persistence true\n")
         f.write("persistence_file %s\n" % (filename.replace('.conf', '.db')))
+        f.write("autosave_interval %d\n" % (3))
 
 def write_acl_1(filename, username):
     with open(filename, 'w') as f:
@@ -67,6 +68,7 @@ def do_test(proto_ver, per_listener, username):
 
         # Remove "write" ability
         write_acl_2(acl_file, username)
+        time.sleep(4)
         broker.terminate()
         broker.wait()
 
