@@ -14,6 +14,7 @@ import atexit
 vg_index = 1
 vg_logfiles = []
 wasm=True
+log=False
 
 class TestError(Exception):
     def __init__(self, message="Mismatched packets"):
@@ -58,10 +59,17 @@ def start_broker(filename, cmd=None, port=0, use_conf=False, expect_fail=False, 
 
     #print(port)
     #print(cmd)
-    if nolog == False:
-        broker = subprocess.Popen(cmd, stderr=subprocess.PIPE)
+    # format the current time with yyyy-MM-dd:HH:mm:ss
+    currtime = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime()) + '_'
+    if wasm:
+        prefix = 'wasm-'
     else:
+        prefix = ''
+    if nolog == False and log == False:
         broker = subprocess.Popen(cmd, stderr=subprocess.DEVNULL)
+    else:
+        f = open('logs/'+str(currtime) + prefix + 'log.log', 'w');
+        broker = subprocess.Popen(cmd, stderr=f, stdout=f)
     for i in range(0, 20):
         time.sleep(delay)
         c = None
