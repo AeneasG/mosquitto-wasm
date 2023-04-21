@@ -11,6 +11,7 @@ def write_config(filename, port):
         f.write("allow_anonymous true\n")
         f.write("persistence true\n")
         f.write("persistence_file mosquitto-%d.db\n" % (port))
+        f.write("autosave_interval %d\n" % (3))
 
 port = mosq_test.get_port()
 conf_file = os.path.basename(__file__).replace('.py', '.conf')
@@ -64,6 +65,8 @@ try:
     mosq_test.receive_unordered(sock, puback2s_packet, publish2a_packet, "puback2a/publish2a")
 
     sock.send(puback2a_packet)
+
+    time.sleep(4)
 
     broker.terminate()
     broker.wait()

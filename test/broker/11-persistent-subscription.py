@@ -10,6 +10,7 @@ def write_config(filename, port):
         f.write("allow_anonymous true\n")
         f.write("persistence true\n")
         f.write("persistence_file mosquitto-%d.db\n" % (port))
+        f.write("autosave_interval %d\n" % (3))
 
 def do_test(proto_ver):
     port = mosq_test.get_port()
@@ -44,6 +45,7 @@ def do_test(proto_ver):
     try:
         sock = mosq_test.do_client_connect(connect_packet, connack_packet, timeout=20, port=port)
         mosq_test.do_send_receive(sock, subscribe_packet, suback_packet, "suback")
+        time.sleep(4)
 
         broker.terminate()
         broker.wait()

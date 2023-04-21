@@ -17,6 +17,7 @@ def write_config(filename, port):
         f.write("allow_anonymous true\n")
         f.write("persistence true\n")
         f.write("persistence_file mosquitto-%d.db\n" % (port))
+        f.write("autosave_interval %d\n" % (3))
 
 port = mosq_test.get_port()
 conf_file = os.path.basename(__file__).replace('.py', '.conf')
@@ -68,7 +69,7 @@ try:
     mosq_test.do_send_receive(helper, publish1s_packet, puback1s_packet, "puback 1")
     mosq_test.do_send_receive(helper, publish2s_packet, puback2s_packet, "puback 2")
     mosq_test.do_send_receive(helper, publish3_packet, puback3_packet, "puback 3")
-
+    time.sleep(4)
     broker.terminate()
     broker.wait()
     (stdo1, stde1) = broker.communicate()
