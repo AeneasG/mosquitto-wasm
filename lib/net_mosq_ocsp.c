@@ -49,10 +49,11 @@ in this Software without prior written authorization of the copyright holder.
 #include <mosquitto_internal.h>
 #include <net_mosq.h>
 
-#include <openssl/safestack.h>
-#include <openssl/tls1.h>
-#include <openssl/ssl.h>
-#include <openssl/ocsp.h>
+#include <wolfssl/options.h>
+// #include <wolfssl/openssl/safestack.h>
+#include <wolfssl/openssl/tls1.h>
+#include <wolfssl/openssl/ssl.h>
+#include <wolfssl/openssl/ocsp.h>
 
 int mosquitto__verify_ocsp_status_cb(SSL * ssl, void *arg)
 {

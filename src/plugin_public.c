@@ -28,7 +28,8 @@ Contributors:
 #include "utlist.h"
 
 #ifdef WITH_TLS
-#  include <openssl/ssl.h>
+#  include <wolfssl/options.h>
+#  include <wolfssl/openssl/ssl.h>
 #endif
 
 const char *mosquitto_client_address(const struct mosquitto *client)

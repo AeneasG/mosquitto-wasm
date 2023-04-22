@@ -21,7 +21,7 @@
 # Disabling this will also mean that passwords must be stored in plain text. It
 # is strongly recommended that you only disable WITH_TLS if you are not using
 # password authentication at all.
-WITH_TLS:=no
+WITH_TLS:=yes
 
 # Comment out to disable TLS/PSK support in the broker and client. Requires
 # WITH_TLS=yes.
@@ -271,12 +271,12 @@ endif
 ifeq ($(WITH_TLS),yes)
 	APP_CPPFLAGS:=$(APP_CPPFLAGS) -DWITH_TLS
 	BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_TLS
-	BROKER_LDADD:=$(BROKER_LDADD) -lssl -lcrypto
+	BROKER_LDADD:=$(BROKER_LDADD) -lwolfssl
 	CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_TLS
 	LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_TLS
-	LIB_LIBADD:=$(LIB_LIBADD) -lssl -lcrypto
-	PASSWD_LDADD:=$(PASSWD_LDADD) -lcrypto
-	STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lssl -lcrypto
+	LIB_LIBADD:=$(LIB_LIBADD) -lwolfssl
+	PASSWD_LDADD:=$(PASSWD_LDADD) -lwolfssl
+	STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lwolfssl
 
 	ifeq ($(WITH_TLS_PSK),yes)
 		BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_TLS_PSK

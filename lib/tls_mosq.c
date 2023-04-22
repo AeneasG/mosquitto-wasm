@@ -30,9 +30,10 @@ Contributors:
 #endif
 
 #include <string.h>
-#include <openssl/conf.h>
-#include <openssl/x509v3.h>
-#include <openssl/ssl.h>
+#include <wolfssl/options.h>
+#include <wolfssl/openssl/conf.h>
+#include <wolfssl/openssl/x509v3.h>
+#include <wolfssl/openssl/ssl.h>
 
 #ifdef WITH_BROKER
 #  include "mosquitto_broker_internal.h"

@@ -62,10 +62,11 @@ Contributors:
 #endif
 
 #ifdef WITH_TLS
-#include <openssl/conf.h>
-#include <openssl/engine.h>
-#include <openssl/err.h>
-#include <openssl/ui.h>
+#include <wolfssl/options.h>
+#include <wolfssl/openssl/conf.h>
+#include <wolfssl/openssl/engine.h>
+#include <wolfssl/openssl/err.h>
+#include <wolfssl/openssl/ui.h>
 #include <tls_mosq.h>
 #endif
 

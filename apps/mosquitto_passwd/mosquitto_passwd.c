@@ -20,8 +20,9 @@ Contributors:
 
 #include <ctype.h>
 #include <errno.h>
-#include <openssl/evp.h>
-#include <openssl/rand.h>
+#include <wolfssl/options.h>
+#include <wolfssl/openssl/evp.h>
+#include <wolfssl/openssl/rand.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>

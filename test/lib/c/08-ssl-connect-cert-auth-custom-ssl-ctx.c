@@ -4,7 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mosquitto.h>
-#include <openssl/ssl.h>
+#include <wolfssl/options.h>
+#include <wolfssl/openssl/ssl.h>
 
 static int run = -1;
 

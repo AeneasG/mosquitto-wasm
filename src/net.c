@@ -72,7 +72,8 @@ Contributors:
 
 #ifdef WITH_TLS
 #  include "tls_mosq.h"
-#  include <openssl/err.h>
+#  include <wolfssl/options.h>
+#  include <wolfssl/openssl/err.h>
 static int tls_ex_index_context = -1;
 static int tls_ex_index_listener = -1;
 #endif
