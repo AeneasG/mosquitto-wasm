@@ -88,52 +88,52 @@ Contributors:
 
 #ifdef WITH_TLS
 int tls_ex_index_mosq = -1;
-UI_METHOD *_ui_method = NULL;
+// UI_METHOD *_ui_method = NULL;
 
 static bool is_tls_initialized = false;
 
 /* Functions taken from OpenSSL s_server/s_client */
-static int ui_open(UI *ui)
-{
-	return UI_method_get_opener(UI_OpenSSL())(ui);
-}
+// static int ui_open(UI *ui)
+// {
+// 	return UI_method_get_opener(UI_OpenSSL())(ui);
+// }
 
-static int ui_read(UI *ui, UI_STRING *uis)
-{
-	return UI_method_get_reader(UI_OpenSSL())(ui, uis);
-}
+// static int ui_read(UI *ui, UI_STRING *uis)
+// {
+// 	return UI_method_get_reader(UI_OpenSSL())(ui, uis);
+// }
 
-static int ui_write(UI *ui, UI_STRING *uis)
-{
-	return UI_method_get_writer(UI_OpenSSL())(ui, uis);
-}
+// static int ui_write(UI *ui, UI_STRING *uis)
+// {
+// 	return UI_method_get_writer(UI_OpenSSL())(ui, uis);
+// }
 
-static int ui_close(UI *ui)
-{
-	return UI_method_get_closer(UI_OpenSSL())(ui);
-}
+// static int ui_close(UI *ui)
+// {
+// 	return UI_method_get_closer(UI_OpenSSL())(ui);
+// }
 
-static void setup_ui_method(void)
-{
-	_ui_method = UI_create_method("OpenSSL application user interface");
-	UI_method_set_opener(_ui_method, ui_open);
-	UI_method_set_reader(_ui_method, ui_read);
-	UI_method_set_writer(_ui_method, ui_write);
-	UI_method_set_closer(_ui_method, ui_close);
-}
+// static void setup_ui_method(void)
+// {
+// 	_ui_method = UI_create_method("OpenSSL application user interface");
+// 	UI_method_set_opener(_ui_method, ui_open);
+// 	UI_method_set_reader(_ui_method, ui_read);
+// 	UI_method_set_writer(_ui_method, ui_write);
+// 	UI_method_set_closer(_ui_method, ui_close);
+// }
 
-static void cleanup_ui_method(void)
-{
-	if(_ui_method){
-		UI_destroy_method(_ui_method);
-		_ui_method = NULL;
-	}
-}
+// static void cleanup_ui_method(void)
+// {
+// 	if(_ui_method){
+// 		UI_destroy_method(_ui_method);
+// 		_ui_method = NULL;
+// 	}
+// }
 
-UI_METHOD *net__get_ui_method(void)
-{
-	return _ui_method;
-}
+// UI_METHOD *net__get_ui_method(void)
+// {
+// 	return _ui_method;
+// }
 
 #endif
 
@@ -163,13 +163,13 @@ void net__cleanup(void)
 	EVP_cleanup();
 
 #    if !defined(OPENSSL_NO_ENGINE)
-	ENGINE_cleanup();
+	// ENGINE_cleanup();
 #    endif
 	is_tls_initialized = false;
 #  endif
 
 	CONF_modules_unload(1);
-	cleanup_ui_method();
+	// cleanup_ui_method();
 #endif
 
 #ifdef WITH_SRV
@@ -198,7 +198,7 @@ void net__init_tls(void)
 #if !defined(OPENSSL_NO_ENGINE)
 	ENGINE_load_builtin_engines();
 #endif
-	setup_ui_method();
+	// setup_ui_method();
 	if(tls_ex_index_mosq == -1){
 		tls_ex_index_mosq = SSL_get_ex_new_index(0, "client context", NULL, NULL, NULL);
 	}
@@ -590,7 +590,6 @@ void net__print_ssl_error(struct mosquitto *mosq)
 
 int net__socket_connect_tls(struct mosquitto *mosq)
 {
-	int ret, err;
 	long res;
 
 	ERR_clear_error();
@@ -678,7 +677,7 @@ static int net__tls_load_ca(struct mosquitto *mosq)
 static int net__init_ssl_ctx(struct mosquitto *mosq)
 {
 	int ret;
-	ENGINE *engine = NULL;
+	// ENGINE *engine = NULL;
 	uint8_t tls_alpn_wire[256];
 	uint8_t tls_alpn_len;
 #if !defined(OPENSSL_NO_ENGINE)
@@ -740,7 +739,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
 		/* Allow use of DHE ciphers */
-		SSL_CTX_set_dh_auto(mosq->ssl_ctx, 1);
+		// SSL_CTX_set_dh_auto(mosq->ssl_ctx, 1);
 #endif
 		/* Disable compression */
 		SSL_CTX_set_options(mosq->ssl_ctx, SSL_OP_NO_COMPRESSION);
@@ -759,20 +758,20 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 #endif
 
 #if !defined(OPENSSL_NO_ENGINE)
-		if(mosq->tls_engine){
-			engine = ENGINE_by_id(mosq->tls_engine);
-			if(!engine){
-				log__printf(mosq, MOSQ_LOG_ERR, "Error loading %s engine\n", mosq->tls_engine);
-				return MOSQ_ERR_TLS;
-			}
-			if(!ENGINE_init(engine)){
-				log__printf(mosq, MOSQ_LOG_ERR, "Failed engine initialisation\n");
-				ENGINE_free(engine);
-				return MOSQ_ERR_TLS;
-			}
-			ENGINE_set_default(engine, ENGINE_METHOD_ALL);
-			ENGINE_free(engine); /* release the structural reference from ENGINE_by_id() */
-		}
+		// if(mosq->tls_engine){
+		// 	engine = ENGINE_by_id(mosq->tls_engine);
+		// 	if(!engine){
+		// 		log__printf(mosq, MOSQ_LOG_ERR, "Error loading %s engine\n", mosq->tls_engine);
+		// 		return MOSQ_ERR_TLS;
+		// 	}
+		// 	if(!ENGINE_init(engine)){
+		// 		log__printf(mosq, MOSQ_LOG_ERR, "Failed engine initialisation\n");
+		// 		ENGINE_free(engine);
+		// 		return MOSQ_ERR_TLS;
+		// 	}
+		// 	ENGINE_set_default(engine, ENGINE_METHOD_ALL);
+		// 	ENGINE_free(engine); /* release the structural reference from ENGINE_by_id() */
+		// }
 #endif
 
 		if(mosq->tls_ciphers){
@@ -780,7 +779,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 			if(ret == 0){
 				log__printf(mosq, MOSQ_LOG_ERR, "Error: Unable to set TLS ciphers. Check cipher list \"%s\".", mosq->tls_ciphers);
 #if !defined(OPENSSL_NO_ENGINE)
-				ENGINE_FINISH(engine);
+				// ENGINE_FINISH(engine);
 #endif
 				net__print_ssl_error(mosq);
 				return MOSQ_ERR_TLS;
@@ -790,7 +789,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 			ret = net__tls_load_ca(mosq);
 			if(ret != MOSQ_ERR_SUCCESS){
 #  if !defined(OPENSSL_NO_ENGINE)
-				ENGINE_FINISH(engine);
+				// ENGINE_FINISH(engine);
 #  endif
 				net__print_ssl_error(mosq);
 				return MOSQ_ERR_TLS;
@@ -815,7 +814,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 					log__printf(mosq, MOSQ_LOG_ERR, "Error: Unable to load client certificate \"%s\".", mosq->tls_certfile);
 #endif
 #if !defined(OPENSSL_NO_ENGINE)
-					ENGINE_FINISH(engine);
+					// ENGINE_FINISH(engine);
 #endif
 					net__print_ssl_error(mosq);
 					return MOSQ_ERR_TLS;
@@ -824,32 +823,32 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 			if(mosq->tls_keyfile){
 				if(mosq->tls_keyform == mosq_k_engine){
 #if !defined(OPENSSL_NO_ENGINE)
-					UI_METHOD *ui_method = net__get_ui_method();
-					if(mosq->tls_engine_kpass_sha1){
-						if(!ENGINE_ctrl_cmd(engine, ENGINE_SECRET_MODE, ENGINE_SECRET_MODE_SHA, NULL, NULL, 0)){
-							log__printf(mosq, MOSQ_LOG_ERR, "Error: Unable to set engine secret mode sha1");
-							ENGINE_FINISH(engine);
-							net__print_ssl_error(mosq);
-							return MOSQ_ERR_TLS;
-						}
-						if(!ENGINE_ctrl_cmd(engine, ENGINE_PIN, 0, mosq->tls_engine_kpass_sha1, NULL, 0)){
-							log__printf(mosq, MOSQ_LOG_ERR, "Error: Unable to set engine pin");
-							ENGINE_FINISH(engine);
-							net__print_ssl_error(mosq);
-							return MOSQ_ERR_TLS;
-						}
-						ui_method = NULL;
-					}
-					pkey = ENGINE_load_private_key(engine, mosq->tls_keyfile, ui_method, NULL);
+					// UI_METHOD *ui_method = net__get_ui_method();
+					// if(mosq->tls_engine_kpass_sha1){
+					// 	if(!ENGINE_ctrl_cmd(engine, ENGINE_SECRET_MODE, ENGINE_SECRET_MODE_SHA, NULL, NULL, 0)){
+					// 		log__printf(mosq, MOSQ_LOG_ERR, "Error: Unable to set engine secret mode sha1");
+					// 		ENGINE_FINISH(engine);
+					// 		net__print_ssl_error(mosq);
+					// 		return MOSQ_ERR_TLS;
+					// 	}
+					// 	if(!ENGINE_ctrl_cmd(engine, ENGINE_PIN, 0, mosq->tls_engine_kpass_sha1, NULL, 0)){
+					// 		log__printf(mosq, MOSQ_LOG_ERR, "Error: Unable to set engine pin");
+					// 		ENGINE_FINISH(engine);
+					// 		net__print_ssl_error(mosq);
+					// 		return MOSQ_ERR_TLS;
+					// 	}
+					// 	ui_method = NULL;
+					// }
+					pkey = NULL; //ENGINE_load_private_key(engine, mosq->tls_keyfile, ui_method, NULL);
 					if(!pkey){
 						log__printf(mosq, MOSQ_LOG_ERR, "Error: Unable to load engine private key file \"%s\".", mosq->tls_keyfile);
-						ENGINE_FINISH(engine);
+						// ENGINE_FINISH(engine);
 						net__print_ssl_error(mosq);
 						return MOSQ_ERR_TLS;
 					}
 					if(SSL_CTX_use_PrivateKey(mosq->ssl_ctx, pkey) <= 0){
-						log__printf(mosq, MOSQ_LOG_ERR, "Error: Unable to use engine private key file \"%s\".", mosq->tls_keyfile);
-						ENGINE_FINISH(engine);
+						log__printfnet__get_ui_method(mosq, MOSQ_LOG_ERR, "Error: Unable to use engine private key file \"%s\".", mosq->tls_keyfile);
+						// ENGINE_FINISH(engine);
 						net__print_ssl_error(mosq);
 						return MOSQ_ERR_TLS;
 					}

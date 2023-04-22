@@ -92,8 +92,8 @@ void net__print_ssl_error(struct mosquitto *mosq);
 int net__socket_apply_tls(struct mosquitto *mosq);
 int net__socket_connect_tls(struct mosquitto *mosq);
 int mosquitto__verify_ocsp_status_cb(SSL * ssl, void *arg);
-UI_METHOD *net__get_ui_method(void);
-#define ENGINE_FINISH(e) if(e) ENGINE_finish(e)
+// UI_METHOD *net__get_ui_method(void);
+// #define ENGINE_FINISH(e) if(e) ENGINE_FIN(e)
 #define ENGINE_SECRET_MODE "SECRET_MODE"
 #define ENGINE_SECRET_MODE_SHA 0x1000
 #define ENGINE_PIN "PIN"
