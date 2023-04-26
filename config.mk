@@ -162,6 +162,11 @@ ifeq ($(RUNTARGET), WASM)
 	CC = clang
 	INCS += -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
     ENDING:=.wasm
+	ifeq ($(WITH_TLS), yes)
+		INCS:=${INCS} -I/usr/local/include
+		CFLAGS:= ${CFLAGS} -DWOLFSSL_WASM
+		LDFLAGS:= ${LDFLAGS} -L/usr/local/lib
+	endif
 
 	CFLAGS:=${CFLAGS} -Wno-sign-conversion -Wno-unused-function -Wno-unused-parameter -Wno-unused-but-set-variable -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID ${INCS}
 	ifeq ($(WITH_THREADING), yes)
