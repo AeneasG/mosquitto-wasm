@@ -23,6 +23,7 @@ apps/mosquitto_passwd/mosquitto_passwd
 build/
 build64/
 
+certs/
 client/mosquitto_pub
 client/mosquitto_rr
 client/mosquitto_sub

@@ -6,8 +6,9 @@ DIRS= \
 .PHONY : all binary check clean reallyclean test install uninstall
 
 all :
+ifneq ($(RUNTARGET), WASM)
 	set -e; for d in ${DIRS}; do $(MAKE) -C $${d}; done
-
+endif
 binary :
 	set -e; for d in ${DIRS}; do $(MAKE) -C $${d} $@; done
 
