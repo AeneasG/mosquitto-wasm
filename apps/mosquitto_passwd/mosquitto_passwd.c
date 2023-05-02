@@ -20,9 +20,14 @@ Contributors:
 
 #include <ctype.h>
 #include <errno.h>
+#ifdef WITH_WOLFSSL
 #include <wolfssl/options.h>
 #include <wolfssl/openssl/evp.h>
 #include <wolfssl/openssl/rand.h>
+#else
+#include <openssl/evp.h>
+#include <openssl/rand.h>
+#endif
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -58,8 +58,12 @@
 
 
 #ifdef WITH_TLS
+#ifdef WITH_WOLFSSL
 #  include <wolfssl/options.h>
 #  include <wolfssl/openssl/opensslconf.h>
+#else
+#  include <openssl/opensslconf.h>
+#endif
 #  if defined(WITH_TLS_PSK) && !defined(OPENSSL_NO_PSK)
 #    define FINAL_WITH_TLS_PSK
 #  endif

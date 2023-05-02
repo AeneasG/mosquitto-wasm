@@ -28,8 +28,12 @@ Contributors:
 #  ifdef WIN32
 #    include <winsock2.h>
 #  endif
+#ifdef WITH_WOLFSSL
 #  include <wolfssl/options.h>
 #  include <wolfssl/openssl/engine.h>
+#else
+#  include <openssl/engine.h>
+#endif
 #endif
 
 #include "mosquitto.h"

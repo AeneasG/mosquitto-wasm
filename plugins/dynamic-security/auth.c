@@ -18,11 +18,18 @@ Contributors:
 
 #include "config.h"
 
+#ifdef WITH_WOLFSSL
 #include <wolfssl/options.h>
 #include <wolfssl/openssl/bio.h>
 #include <wolfssl/openssl/buffer.h>
 #include <wolfssl/openssl/evp.h>
 #include <wolfssl/openssl/rand.h>
+#else
+#include <openssl/bio.h>
+#include <openssl/buffer.h>
+#include <openssl/evp.h>
+#include <openssl/rand.h>
+#endif
 
 #include "dynamic_security.h"
 #include "mosquitto.h"

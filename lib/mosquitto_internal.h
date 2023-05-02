@@ -27,8 +27,12 @@ Contributors:
 #endif
 
 #ifdef WITH_TLS
+#ifdef WITH_WOLFSSL
 #  include <wolfssl/options.h>
 #  include <wolfssl/openssl/ssl.h>
+#else
+#  include <openssl/ssl.h>
+#endif
 #else
 #  include <time.h>
 #endif

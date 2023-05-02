@@ -4,8 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mosquitto.h>
+#ifdef WITH_WOLFSSL
 #include <wolfssl/options.h>
 #include <wolfssl/openssl/ssl.h>
+#else
+#include <openssl/ssl.h>
+#endif
 
 static int run = -1;
 

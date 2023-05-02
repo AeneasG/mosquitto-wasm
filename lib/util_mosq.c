@@ -39,9 +39,14 @@ Contributors:
 #endif
 
 #ifdef WITH_TLS
+#ifdef WITH_WOLFSSL
 #  include <wolfssl/options.h>
 #  include <wolfssl/openssl/bn.h>
 #  include <wolfssl/openssl/rand.h>
+#else
+#  include <openssl/bn.h>
+#  include <openssl/rand.h>
+#endif
 #endif
 
 #ifdef WITH_BROKER

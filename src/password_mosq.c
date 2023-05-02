@@ -20,11 +20,18 @@ Contributors:
 
 #include <errno.h>
 #ifdef WITH_TLS
+#ifdef WITH_WOLFSSL
 #  include <wolfssl/options.h>
 #  include <wolfssl/openssl/opensslv.h>
 #  include <wolfssl/openssl/evp.h>
 #  include <wolfssl/openssl/rand.h>
 #  include <wolfssl/openssl/buffer.h>
+#else
+#  include <openssl/opensslv.h>
+#  include <openssl/evp.h>
+#  include <openssl/rand.h>
+#  include <openssl/buffer.h>
+#endif
 #endif
 #include <signal.h>
 #include <stdio.h>

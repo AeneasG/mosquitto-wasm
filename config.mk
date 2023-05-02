@@ -23,6 +23,8 @@
 # password authentication at all.
 WITH_TLS:=yes
 
+WITH_WOLFSSL:=no
+
 # Comment out to disable TLS/PSK support in the broker and client. Requires
 # WITH_TLS=yes.
 # This must be disabled if using openssl < 1.0.
@@ -276,12 +278,20 @@ endif
 ifeq ($(WITH_TLS),yes)
 	APP_CPPFLAGS:=$(APP_CPPFLAGS) -DWITH_TLS
 	BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_TLS
-	BROKER_LDADD:=$(BROKER_LDADD) -lwolfssl
 	CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_TLS
 	LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_TLS
-	LIB_LIBADD:=$(LIB_LIBADD) -lwolfssl
-	PASSWD_LDADD:=$(PASSWD_LDADD) -lwolfssl
-	STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lwolfssl
+	ifeq ($(WITH_WOLFSSL),yes)
+		BROKER_LDADD:=$(BROKER_LDADD) -lwolfssl
+		CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_TLS
+		LIB_LIBADD:=$(LIB_LIBADD) -lwolfssl
+		PASSWD_LDADD:=$(PASSWD_LDADD) -lwolfssl
+		STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lwolfssl
+	else
+		BROKER_LDADD:=$(BROKER_LDADD) -lssl -lcrypto
+		LIB_LIBADD:=$(LIB_LIBADD) -lssl -lcrypto
+		PASSWD_LDADD:=$(PASSWD_LDADD) -lcrypto
+		STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lssl -lcrypto
+	endif
 
 	ifeq ($(WITH_TLS_PSK),yes)
 		BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_TLS_PSK
