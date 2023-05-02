@@ -73,6 +73,9 @@ test/broker/c/*.test
 test/ssl/*.csr
 test/ssl/rootCA/
 test/ssl/signingCA/
+test/broker/ssl/
+test/broker/captures/
+test/broker/logs/
 
 test/lib/c/*.test
 test/lib/cpp/*.test

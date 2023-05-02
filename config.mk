@@ -23,7 +23,7 @@
 # password authentication at all.
 WITH_TLS:=yes
 
-WITH_WOLFSSL:=no
+WITH_WOLFSSL:=yes
 
 # Comment out to disable TLS/PSK support in the broker and client. Requires
 # WITH_TLS=yes.
@@ -166,7 +166,7 @@ ifeq ($(RUNTARGET), WASM)
     ENDING:=.wasm
 	ifeq ($(WITH_TLS), yes)
 		INCS:=${INCS} -I/usr/local/include
-		CFLAGS:= ${CFLAGS} -DWOLFSSL_WASM
+		CFLAGS:= ${CFLAGS} -DWOLFSSL_WASM -DWITH_WOLFSSL
 		LDFLAGS:= ${LDFLAGS} -L/usr/local/lib
 	endif
 
@@ -281,11 +281,11 @@ ifeq ($(WITH_TLS),yes)
 	CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_TLS
 	LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_TLS
 	ifeq ($(WITH_WOLFSSL),yes)
-		BROKER_LDADD:=$(BROKER_LDADD) -lwolfssl
-		CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_TLS
-		LIB_LIBADD:=$(LIB_LIBADD) -lwolfssl
-		PASSWD_LDADD:=$(PASSWD_LDADD) -lwolfssl
-		STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lwolfssl
+		BROKER_LDADD:=$(BROKER_LDADD) -lwolfssl -DWITH_WOLFSSL
+		CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_TLS -DWITH_WOLFSSL
+		LIB_LIBADD:=$(LIB_LIBADD) -lwolfssl -DWITH_WOLFSSL
+		PASSWD_LDADD:=$(PASSWD_LDADD) -lwolfssl -DWITH_WOLFSSL
+		STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lwolfssl -DWITH_WOLFSSL
 	else
 		BROKER_LDADD:=$(BROKER_LDADD) -lssl -lcrypto
 		LIB_LIBADD:=$(LIB_LIBADD) -lssl -lcrypto
