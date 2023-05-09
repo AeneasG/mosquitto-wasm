@@ -172,7 +172,8 @@ ifeq ($(RUNTARGET), WASM)
 
 	CFLAGS:=${CFLAGS} -Wno-sign-conversion -Wno-unused-function -Wno-unused-parameter -Wno-unused-but-set-variable -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID ${INCS}
 	ifeq ($(WITH_THREADING), yes)
-		CFLAGS:=${CFLAGS} --target=wasm32-wasi-threads
+		CFLAGS:=${CFLAGS} --target=wasm32-wasi-threads -pthread
+		LDFLAGS:=${LDFLAGS} -lpthread -z stack-size=163840 -Wl,--initial-memory=196608 -Wl,--export=__main_argc_argv -Wl,--export=__heap_base -Wl,--export=__data_end
 	endif
 
     LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=$(WASI_SDK_PATH)/share/wasi-sysroot/share/wasm32-wasi-threads/defined-symbols.txt --sysroot=/opt/wasi-sdk/share/wasi-sysroot/ ${INCS}
@@ -305,10 +306,7 @@ ifeq ($(WITH_TLS),yes)
 endif
 
 ifeq ($(WITH_THREADING),yes)
-	ifeq ($(RUNTARGET), WASM)
-		LIB_LDFLAGS:=$(LIB_LDFLAGS) -lpthread
-		STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lpthread
-	else
+	ifneq ($(RUNTARGET), WASM)
 		LIB_LDFLAGS:=$(LIB_LDFLAGS) -pthread
 		STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -pthread
 	endif
