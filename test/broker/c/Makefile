@@ -46,6 +46,7 @@ ${TESTS} : %.test: %.c
 ifeq ($(RUNTARGET), WASM)
 	# TODO use static library instead of shared library and export the needed stuff
 	# $(CROSS_COMPILE)$(CC) ${CFLAGS} $< -o $@ -I../../../lib -L../../../lib -lmosquitto
+	$(CC) ${CFLAGS} $< -o $@ /usr/local/lib/libmosquitto.so.1
 else
 	$(CC) ${CFLAGS} $< -o $@ ../../../lib/libmosquitto.so.1
 endif

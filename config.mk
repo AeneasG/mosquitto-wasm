@@ -25,10 +25,13 @@ WITH_TLS:=yes
 
 WITH_WOLFSSL:=yes
 
+# Add debugging information
+# CFLAGS:=-g
+
 # Comment out to disable TLS/PSK support in the broker and client. Requires
 # WITH_TLS=yes.
 # This must be disabled if using openssl < 1.0.
-WITH_TLS_PSK:=no
+WITH_TLS_PSK:=yes
 
 # Comment out to disable client threading support.
 WITH_THREADING:=no
@@ -164,6 +167,7 @@ ifeq ($(RUNTARGET), WASM)
 	CC = clang
 	INCS += -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
     ENDING:=.wasm
+	LDFLAGS:=${LDFLAGS} -z stack-size=1638400
 	ifeq ($(WITH_TLS), yes)
 		INCS:=${INCS} -I/usr/local/include
 		CFLAGS:= ${CFLAGS} -DWOLFSSL_WASM -DWITH_WOLFSSL
@@ -173,7 +177,7 @@ ifeq ($(RUNTARGET), WASM)
 	CFLAGS:=${CFLAGS} -Wno-sign-conversion -Wno-unused-function -Wno-unused-parameter -Wno-unused-but-set-variable -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID ${INCS}
 	ifeq ($(WITH_THREADING), yes)
 		CFLAGS:=${CFLAGS} --target=wasm32-wasi-threads -pthread
-		LDFLAGS:=${LDFLAGS} -lpthread -z stack-size=163840 -Wl,--initial-memory=196608 -Wl,--export=__main_argc_argv -Wl,--export=__heap_base -Wl,--export=__data_end
+		LDFLAGS:=${LDFLAGS} -lpthread
 	endif
 
     LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=$(WASI_SDK_PATH)/share/wasi-sysroot/share/wasm32-wasi-threads/defined-symbols.txt --sysroot=/opt/wasi-sdk/share/wasi-sysroot/ ${INCS}
