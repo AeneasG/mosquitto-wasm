@@ -5,7 +5,7 @@ include ../../../config.mk
 CFLAGS=-I../../../include -Werror
 # use static lib for WASM
 ifeq ($(RUNTARGET), WASM)
-LIBS=-I../../../lib -L../../../lib -lmosquitto $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c -I/opt/wasm-micro-runtime/core/iwasm/libraries/lib-socket/inc
+LIBS=-I../../../lib -L../../../lib -lmosquitto $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c -I/opt/wasm-micro-runtime/core/iwasm/libraries/lib-socket/inc  -D_WASI_EMULATED_SIGNAL -Wl,-lwasi-emulated-signal
 else
 LIBS=../../../lib/libmosquitto.so.1
 endif
@@ -64,7 +64,14 @@ ifeq ($(WITH_TLS),yes)
 SRC += \
 	08-ssl-connect-cert-auth-custom-ssl-ctx.c \
 	08-ssl-connect-cert-auth-custom-ssl-ctx-default.c
+ifeq ($(WITH_WOLFSSL), yes)
+LIBS += -lwolfssl -DWITH_WOLFSSL -L/usr/local/lib -I/usr/local/include
+ifeq ($(RUNTARGET), WASM)
+LIBS += -DWOLFSSL_WASM
+endif
+else
 LIBS += -lssl -lcrypto
+endif
 endif
 
 ifeq ($(WITH_THREADING),yes)
