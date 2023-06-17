@@ -52,6 +52,10 @@ extern int tls_ex_index_mosq;
 
 int mosquitto__server_certificate_verify(int preverify_ok, X509_STORE_CTX *ctx)
 {
+	#ifdef WITH_WOLFSSL
+	// WolfSSL has already verified the hostname
+	return preverify_ok;
+	#else
 	/* Preverify should have already checked expiry, revocation.
 	 * We need to verify the hostname. */
 	struct mosquitto *mosq;
@@ -89,6 +93,7 @@ int mosquitto__server_certificate_verify(int preverify_ok, X509_STORE_CTX *ctx)
 	}else{
 		return preverify_ok;
 	}
+	#endif
 }
 
 static int mosquitto__cmp_hostname_wildcard(char *certname, const char *hostname)
