@@ -15,9 +15,9 @@ if sys.version < '2.7':
 def write_config(filename, pw_file, port, option):
     with open(filename, 'w') as f:
         f.write("listener %d\n" % (port))
-        f.write("cafile ../ssl/all-ca.crt\n")
-        f.write("certfile ../ssl/server.crt\n")
-        f.write("keyfile ../ssl/server.key\n")
+        f.write("cafile ssl/all-ca.crt\n")
+        f.write("certfile ssl/server.crt\n")
+        f.write("keyfile ssl/server.key\n")
         f.write("require_certificate true\n")
         f.write("%s true\n" % (option))
         f.write("password_file %s\n" % (pw_file))
@@ -43,8 +43,8 @@ def do_test(option):
 
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile="../ssl/test-root-ca.crt")
-        context.load_cert_chain(certfile="../ssl/client.crt", keyfile="../ssl/client.key")
+        context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile="ssl/all-ca.crt")
+        context.load_cert_chain(certfile="ssl/client.crt", keyfile="ssl/client.key")
         ssock = context.wrap_socket(sock, server_hostname="localhost")
         ssock.settimeout(20)
         ssock.connect(("localhost", port))

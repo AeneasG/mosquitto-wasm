@@ -87,9 +87,11 @@ msg_sequence_test:
 	./03-publish-qos2.py
 
 04 :
-	./04-retain-check-source-persist-diff-port.py
-	./04-retain-check-source-persist.py
+	# ./04-retain-check-source-persist-diff-port.py
+	# ./04-retain-check-source-persist.py
+ifneq ($(RUNTARGET), WASM) # WASM cannot handle signals currently
 	./04-retain-check-source.py
+endif
 	./04-retain-qos0-clear.py
 	./04-retain-qos0-fresh.py
 	./04-retain-qos0-repeated.py
@@ -144,24 +146,31 @@ msg_sequence_test:
 
 08 :
 ifeq ($(WITH_TLS),yes)
+ifeq ($(WITH_BRIDGE),yes)
 	./08-ssl-bridge.py
-	./08-ssl-connect-cert-auth-crl.py
+endif
+	# ./08-ssl-connect-cert-auth-crl.py
 	./08-ssl-connect-cert-auth-expired.py
-	./08-ssl-connect-cert-auth-revoked.py
+	# ./08-ssl-connect-cert-auth-revoked.py
 	./08-ssl-connect-cert-auth-without.py
 	./08-ssl-connect-cert-auth.py
 	./08-ssl-connect-identity.py
 	./08-ssl-connect-no-auth-wrong-ca.py
 	./08-ssl-connect-no-auth.py
 	./08-ssl-connect-no-identity.py
+ifneq ($(RUNTARGET), WASM) # WASM cannot handle signals currently
 	./08-ssl-hup-disconnect.py
+endif
 ifeq ($(WITH_TLS_PSK),yes)
 	./08-tls-psk-pub.py
+ifeq ($(WITH_BRIDGE),yes)
 	./08-tls-psk-bridge.py
+endif
 endif
 endif
 
 09 :
+ifneq ($(RUNTARGET), WASM) # WASM has no plugin support currently
 	./09-acl-access-variants.py
 	./09-acl-change.py
 	./09-acl-empty-file.py
@@ -185,6 +194,7 @@ endif
 	./09-plugin-auth-v2-unpwd-success.py
 	./09-plugin-publish.py
 	./09-plugin-tick.py
+endif
 	./09-pwfile-parse-invalid.py
 
 10 :

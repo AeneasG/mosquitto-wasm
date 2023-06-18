@@ -13,7 +13,7 @@ def write_config(filename, port1, port2):
         f.write("notifications false\n")
         f.write("restart_timeout 2\n")
         f.write("\n")
-        f.write("bridge_cafile ../ssl/all-ca.crt\n")
+        f.write("bridge_cafile ssl/all-ca.crt\n")
         f.write("bridge_insecure true\n")
 
 (port1, port2) = mosq_test.get_port(2)
@@ -34,8 +34,8 @@ publish_packet = mosq_test.gen_publish("bridge/ssl/test", qos=0, payload="messag
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH, cafile="../ssl/all-ca.crt")
-context.load_cert_chain(certfile="../ssl/server.crt", keyfile="../ssl/server.key")
+context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH, cafile="ssl/all-ca.crt")
+context.load_cert_chain(certfile="ssl/server.crt", keyfile="ssl/server.key")
 ssock = context.wrap_socket(sock, server_side=True)
 ssock.settimeout(20)
 ssock.bind(('', port1))

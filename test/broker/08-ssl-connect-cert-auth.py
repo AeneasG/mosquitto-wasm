@@ -14,9 +14,9 @@ def write_config(filename, port1, port2):
         f.write("allow_anonymous true\n")
         f.write("listener %d\n" % (port1))
         f.write("allow_anonymous true\n")
-        f.write("cafile ../ssl/all-ca.crt\n")
-        f.write("certfile ../ssl/server.crt\n")
-        f.write("keyfile ../ssl/server.key\n")
+        f.write("cafile ssl/all-ca.crt\n")
+        f.write("certfile ssl/server.crt\n")
+        f.write("keyfile ssl/server.key\n")
         f.write("require_certificate true\n")
 
 (port1, port2) = mosq_test.get_port(2)
@@ -32,8 +32,8 @@ broker = mosq_test.start_broker(filename=os.path.basename(__file__), port=port2,
 
 try:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile="../ssl/test-root-ca.crt")
-    context.load_cert_chain(certfile="../ssl/client.crt", keyfile="../ssl/client.key")
+    context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile="ssl/all-ca.crt")
+    context.load_cert_chain(certfile="ssl/client.crt", keyfile="ssl/client.key")
     ssock = context.wrap_socket(sock, server_hostname="localhost")
     ssock.settimeout(20)
     ssock.connect(("localhost", port1))

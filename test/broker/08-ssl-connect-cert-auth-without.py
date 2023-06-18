@@ -12,9 +12,9 @@ def write_config(filename, port1, port2):
     with open(filename, 'w') as f:
         f.write("port %d\n" % (port2))
         f.write("listener %d\n" % (port1))
-        f.write("cafile ../ssl/all-ca.crt\n")
-        f.write("certfile ../ssl/server.crt\n")
-        f.write("keyfile ../ssl/server.key\n")
+        f.write("cafile ssl/all-ca.crt\n")
+        f.write("certfile ssl/server.crt\n")
+        f.write("keyfile ssl/server.key\n")
         f.write("require_certificate true\n")
 
 (port1, port2) = mosq_test.get_port(2)
