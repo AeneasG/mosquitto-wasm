@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 	if(mosq == NULL){
 		return 1;
 	}
-	mosquitto_tls_set(mosq, "../ssl/test-fake-root-ca.crt", NULL, "../ssl/client.crt", "../ssl/client.key", NULL);
+	mosquitto_tls_set(mosq, "ssl/test-fake-root-ca.crt", NULL, "ssl/client.crt", "ssl/client.key", NULL);
 	mosquitto_connect_callback_set(mosq, on_connect);
 
 	rc = mosquitto_connect(mosq, "localhost", port, 60);

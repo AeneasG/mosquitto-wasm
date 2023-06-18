@@ -26,8 +26,8 @@ disconnect_packet = mosq_test.gen_disconnect()
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH, cafile="../ssl/all-ca.crt")
-context.load_cert_chain(certfile="../ssl/server.crt", keyfile="../ssl/server.key")
+context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH, cafile="ssl/all-ca.crt")
+context.load_cert_chain(certfile="ssl/server.crt", keyfile="ssl/server.key")
 context.verify_mode = ssl.CERT_REQUIRED
 ssock = context.wrap_socket(sock, server_side=True)
 ssock.settimeout(10)

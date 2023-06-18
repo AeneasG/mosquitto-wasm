@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	mosquitto_int_option(mosq, MOSQ_OPT_SSL_CTX_WITH_DEFAULTS, 1);
 	mosquitto_void_option(mosq, MOSQ_OPT_SSL_CTX, ssl_ctx);
 
-	mosquitto_tls_set(mosq, "../ssl/test-root-ca.crt", "../ssl/certs", "../ssl/client.crt", "../ssl/client.key", NULL);
+	mosquitto_tls_set(mosq, "ssl/all-ca.crt", "ssl/certs", "ssl/client.crt", "ssl/client.key", NULL);
 	mosquitto_connect_callback_set(mosq, on_connect);
 	mosquitto_disconnect_callback_set(mosq, on_disconnect);
 

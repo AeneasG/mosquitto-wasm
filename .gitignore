@@ -79,6 +79,7 @@ test/broker/logs/
 
 test/lib/c/*.test
 test/lib/cpp/*.test
+test/lib/ssl/
 
 test/unit/bridge_topic_test
 test/unit/coverage.info

@@ -47,15 +47,15 @@ int main(int argc, char *argv[])
 	ssl_ctx = SSL_CTX_new(TLS_client_method());
 
 	SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, NULL);
-	SSL_CTX_use_certificate_chain_file(ssl_ctx, "../ssl/client.crt");
-	SSL_CTX_use_PrivateKey_file(ssl_ctx, "../ssl/client.key", SSL_FILETYPE_PEM);
-	SSL_CTX_load_verify_locations(ssl_ctx, "../ssl/test-root-ca.crt", "../ssl/certs");
+	SSL_CTX_use_certificate_chain_file(ssl_ctx, "ssl/client.crt");
+	SSL_CTX_use_PrivateKey_file(ssl_ctx, "ssl/client.key", SSL_FILETYPE_PEM);
+	SSL_CTX_load_verify_locations(ssl_ctx, "ssl/all-ca.crt", "../ssl/certs");
 
 	mosq = mosquitto_new("08-ssl-connect-crt-auth", true, NULL);
 	if(mosq == NULL){
 		return 1;
 	}
-	mosquitto_tls_set(mosq, "../ssl/test-root-ca.crt", "../ssl/certs", "../ssl/client.crt", "../ssl/client.key", NULL);
+	mosquitto_tls_set(mosq, "ssl/all-ca.crt", "ssl/certs", "ssl/client.crt", "ssl/client.key", NULL);
 	mosquitto_connect_callback_set(mosq, on_connect);
 	mosquitto_disconnect_callback_set(mosq, on_disconnect);
 
