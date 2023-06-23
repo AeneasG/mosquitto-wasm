@@ -55,8 +55,6 @@ You can add any other option to build mosquitto as described in the standard mos
 
 Currently, known options that are not supported or not tested are:
 * `WITH_WRAP`
-* `WITH_TLS`
-* `WITH_TLS_PSK`
 * `WITH_BRIDGE`
 * `WITH_DB_UPGRADE`
 * `WITH_SYSTEMD`
@@ -77,12 +75,62 @@ Experimental options
 * `WITH_THREADING`: App compiles but might behave unexpected, e.g. tests are not able to compile and run
 
 Known options, that are supported
+* `WITH_TLS` (WITH WolfSSL only, see comment below)
+* `WITH_TLS_PSK`
 * `WITH_PERSISTENCE`
 * `WITH_MEMORY_TRACKING`
 * `WITH_SYS_TREE`
 * `WITH_SOCKS` (probably only impact on client)
 * `WITH_CJSON` (only relevant to the client)
 * `WITH_CONTROL`
+
+### TLS
+WolfSSL has been used to provide TLS for mosquitto in the WASM version. WolfSSL works in general also for the Linux version of mosquitto. To enable WolfSSL (instead of the default OpenSSL), specify
+
+``-DWITH_WOLFSSL=1``
+
+#### Build WolfSSL
+You will probably have to build first WolfSSL. To do so, perform the following steps:
+1. Clone [WolfSSL](https://github.com/X-Margin-Inc/wolfssl)
+2. Build and install the linux version to have the header files installed
+```bash
+./autogen
+# ocsp is an alternative way of validating certificates
+# enable-all makes sure the openssl compatibility layer is built as well
+./configure --enable-ocsp --enable-nginx --enable-opensslall --enable-stunnel
+
+make
+sudo make install
+# update the linker cache
+sudo ldconfig 
+```
+
+3. Prepare build of WolfSSL for WASM
+Go to `wolfssl/wolfio.h` and add the following lines at the top of the file
+
+```c
+#ifdef   __wasi__
+#include   <arpa/inet.h>;
+#include   <netinet/in.h>;
+#endif
+```
+
+Then, in `$WOLFSSLROOT/IDE/Wasm/wasm_static.mk` add to the `Wolfssl_C_Extra_Flags` the following flags
+``-DHAVE_OCSP -DHAVE_CERTIFICATE_STATUS_REQUEST -DOPENSSL_EXTRA -DOPENSSL_ALL -DHAVE_EX_DATA -DSESSION_CERTS -DWOLFSSL_SYS_CA_CERTS -DOPENSSL_COMPATIBLE_DEFAULTS```
+
+4. Build WolfSSL for WASM
+````bash
+cd $WOLFSSLROOT/IDE/Wasm
+make -f wasm_static.mk clean
+make -f wasm_static.mk all
+sudo cp libwolfssl.a /usr/local/lib/libwolfssl.a
+````
+
+Now you should be ready to build mosquitto with WolfSSL by running
+````bash
+# add your config to config.mk, then
+make clean && make RUNTARGET=WASM
+````
 
 
 ## Run with WAMR
