@@ -699,7 +699,8 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 {
 	mosq_sock_t sock = INVALID_SOCKET;
 	struct addrinfo hints;
-	struct addrinfo *ainfo, *rp;
+	struct addrinfo *rp;
+	// struct addrinfo *ainfo, *rp;
 	char service[10];
 	int rc;
 	int ss_opt = 1;
@@ -713,65 +714,98 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 	snprintf(service, 10, "%d", listener->port);
     memset(&hints, 0, sizeof(struct addrinfo));
 
-#ifdef __wasi__
-    hints.ai_socktype = SOCK_STREAM;
+// #ifdef __wasi__
+//     hints.ai_socktype = SOCK_STREAM;
 
-    if(listener->host == NULL){
-        listener->host = "localhost";
-    }
+//     if(listener->host == NULL){
+//         listener->host = "localhost";
+//     }
 
-    if(listener->socket_domain){
-        hints.ai_family = listener->socket_domain;
-        rc = getaddrinfo(listener->host, service, &hints, &ainfo);
-    } else {
-        struct addrinfo *ainfoIpV4, *ainfoIpV6;
-        hints.ai_family = AF_INET;
-        int tryIpV4 = getaddrinfo(listener->host, service, &hints, &ainfoIpV4);
-		// IPv4 getaddrinfo can return multiple addresses, but we only want the first one
-		if(tryIpV4 == 0 && ainfoIpV4->ai_next != NULL) {
-			freeaddrinfo(ainfoIpV4->ai_next);
-			ainfoIpV4->ai_next = NULL;
-		}
-        hints.ai_family = AF_INET6;
-        int tryIpV6 = getaddrinfo(listener->host, service, &hints, &ainfoIpV6);
-        if(tryIpV6 == 0 && tryIpV4 == 0) {
-            ainfo = ainfoIpV4;
-            rp = ainfo;
-            // combine ainfoIpV4 and ainfoIpV6 into ainfo
-            while(rp->ai_next != NULL) {
-                rp = rp ->ai_next;
-            }
-            rp->ai_next = ainfoIpV6;
-            rc = tryIpV6;
-        } else if(tryIpV6 == 0) {
-            ainfo = ainfoIpV6;
-            rc = tryIpV6;
-        } else if(tryIpV4 == 0) {
-            ainfo = ainfoIpV4;
-            rc = tryIpV4;
-        } else {
-            log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", strerror(errno));
-            rc = INVALID_SOCKET;
-        }
-    }
-#else
-    hints.ai_flags = AI_PASSIVE;
-    hints.ai_socktype = SOCK_STREAM;
+//     if(listener->socket_domain){
+//         hints.ai_family = listener->socket_domain;
+//         rc = getaddrinfo(listener->host, service, &hints, &ainfo);
+//     } else {
+//         struct addrinfo *ainfoIpV4, *ainfoIpV6;
+//         hints.ai_family = AF_INET;
+//         int tryIpV4 = getaddrinfo(listener->host, service, &hints, &ainfoIpV4);
+// 		// IPv4 getaddrinfo can return multiple addresses, but we only want the first one
+// 		if(tryIpV4 == 0 && ainfoIpV4->ai_next != NULL) {
+// 			freeaddrinfo(ainfoIpV4->ai_next);
+// 			ainfoIpV4->ai_next = NULL;
+// 		}
+//         hints.ai_family = AF_INET6;
+//         int tryIpV6 = getaddrinfo(listener->host, service, &hints, &ainfoIpV6);
+//         if(tryIpV6 == 0 && tryIpV4 == 0) {
+//             ainfo = ainfoIpV4;
+//             rp = ainfo;
+//             // combine ainfoIpV4 and ainfoIpV6 into ainfo
+//             while(rp->ai_next != NULL) {
+//                 rp = rp ->ai_next;
+//             }
+//             rp->ai_next = ainfoIpV6;
+//             rc = tryIpV6;
+//         } else if(tryIpV6 == 0) {
+//             ainfo = ainfoIpV6;
+//             rc = tryIpV6;
+//         } else if(tryIpV4 == 0) {
+//             ainfo = ainfoIpV4;
+//             rc = tryIpV4;
+//         } else {
+//             log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", strerror(errno));
+//             rc = INVALID_SOCKET;
+//         }
+//     }
+// #else
+//     hints.ai_flags = AI_PASSIVE;
+//     hints.ai_socktype = SOCK_STREAM;
 
-	if(listener->socket_domain){
-		hints.ai_family = listener->socket_domain;
-	}else{
-        hints.ai_family = AF_UNSPEC;
-	}
-	rc = getaddrinfo(listener->host, service, &hints, &ainfo);
-#endif
-	if (rc){
-		log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", strerror(errno));
-		return INVALID_SOCKET;
-	}
+// 	if(listener->socket_domain){
+// 		hints.ai_family = listener->socket_domain;
+// 	}else{
+//         hints.ai_family = AF_UNSPEC;
+// 	}
+// 	rc = getaddrinfo(listener->host, service, &hints, &ainfo);
+// #endif
+// 	if (rc){
+// 		log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", strerror(errno));
+// 		return INVALID_SOCKET;
+// 	}
 
 	listener->sock_count = 0;
 	listener->socks = NULL;
+
+	// TODO in theory we could do the following:
+	// if the listener already specifies a socket domain, then we can just use that
+	// if not, then we try to use IPv4 and IPv6 both
+	// here we simply assume we always like to do both
+	// allocate space for an addrinfo
+
+	struct addrinfo *ainfo = malloc(sizeof(struct addrinfo));
+	memset(ainfo, 0, sizeof(struct addrinfo));
+	ainfo->ai_family = AF_INET;
+	ainfo->ai_socktype = SOCK_STREAM;
+	ainfo->ai_protocol = IPPROTO_TCP;
+	ainfo->ai_addrlen = sizeof(struct sockaddr_in);
+	ainfo->ai_addr = malloc(sizeof(struct sockaddr_in));
+	memset(ainfo->ai_addr, 0, sizeof(struct sockaddr_in));
+	((struct sockaddr_in *)ainfo->ai_addr)->sin_family = AF_INET;
+	((struct sockaddr_in *)ainfo->ai_addr)->sin_port = htons(listener->port);
+	((struct sockaddr_in *)ainfo->ai_addr)->sin_addr.s_addr = htonl(INADDR_ANY);
+
+	// do the same for IpV6
+	// struct addrinfo *ainfoIpV6 = malloc(sizeof(struct addrinfo));
+	// memset(ainfoIpV6, 0, sizeof(struct addrinfo));
+	// ainfoIpV6->ai_family = AF_INET6;
+	// ainfoIpV6->ai_socktype = SOCK_STREAM;
+	// ainfoIpV6->ai_protocol = IPPROTO_TCP;
+	// ainfoIpV6->ai_addrlen = sizeof(struct sockaddr_in6);
+	// ainfoIpV6->ai_addr = malloc(sizeof(struct sockaddr_in6));
+	// memset(ainfoIpV6->ai_addr, 0, sizeof(struct sockaddr_in6));
+	// ((struct sockaddr_in6 *)ainfoIpV6->ai_addr)->sin6_family = AF_INET6;
+	// ((struct sockaddr_in6 *)ainfoIpV6->ai_addr)->sin6_port = htons(listener->port);
+	// ((struct sockaddr_in6 *)ainfoIpV6->ai_addr)->sin6_addr = in6addr_any;
+
+	// ainfo->ai_next = ainfoIpV6;
 
 	for(rp = ainfo; rp; rp = rp->ai_next){
 		if(rp->ai_family == AF_INET){
