@@ -171,7 +171,7 @@ ifeq ($(RUNTARGET), WASM)
 	ifeq ($(WITH_TLS), yes)
 		INCS:=${INCS} -I/usr/local/include
 		CFLAGS:= ${CFLAGS} -DWOLFSSL_WASM -DWITH_WOLFSSL
-		LDFLAGS:= ${LDFLAGS} -L./build_deps
+		LDFLAGS:= ${LDFLAGS} -L./../build_deps
 	endif
 
 	CFLAGS:=${CFLAGS} -Wno-sign-conversion -Wno-unused-function -Wno-unused-parameter -Wno-unused-but-set-variable -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID ${INCS}
