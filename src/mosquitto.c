@@ -322,11 +322,11 @@ static int listeners__start_local_only(void)
 #endif
                                   );
 		if(rc == MOSQ_ERR_NOMEM) return MOSQ_ERR_NOMEM;
-		rc = listeners__add_local("::1", 1883
-#ifdef __wasi__
-                                  , AF_INET6
-#endif
-                                  );
+// 		rc = listeners__add_local("::1", 1883
+// #ifdef __wasi__
+//                                   , AF_INET6
+// #endif
+//                                   );
 		if(rc == MOSQ_ERR_NOMEM) return MOSQ_ERR_NOMEM;
 	}else{
 		for(i=0; i<db.config->cmd_port_count; i++){

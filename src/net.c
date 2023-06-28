@@ -27,7 +27,7 @@ Contributors:
 #include <features.h>
 #include <sys/socket.h>
 #include <wasi/api.h>
-#include <wasi_socket_ext.h>
+// #include <wasi_socket_ext.h>
 
 #elif !defined(WIN32)
 #  include <arpa/inet.h>
