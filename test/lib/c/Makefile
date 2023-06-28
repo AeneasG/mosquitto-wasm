@@ -65,7 +65,7 @@ SRC += \
 	08-ssl-connect-cert-auth-custom-ssl-ctx.c \
 	08-ssl-connect-cert-auth-custom-ssl-ctx-default.c
 ifeq ($(WITH_WOLFSSL), yes)
-LIBS += -lwolfssl -DWITH_WOLFSSL -L./../../build_deps -I/usr/local/include
+LIBS += -lwolfssl -DWITH_WOLFSSL -L./../../../build_deps -I/usr/local/include
 ifeq ($(RUNTARGET), WASM)
 LIBS += -DWOLFSSL_WASM
 endif
