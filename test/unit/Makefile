@@ -8,7 +8,7 @@ ifeq ($(WITH_BUNDLED_DEPS),yes)
 endif
 
 ifeq ($(RUNTARGET), WASM)
-	LDADD:=$(LDADD) -L/usr/local/lib
+	LDADD:=$(LDADD) -L./../../build_deps
 else
 	CFLAGS:=$(CFLAGS) -coverage
 	LDFLAGS:=$(LDFLAGS) -coverage
