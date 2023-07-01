@@ -18,6 +18,12 @@ Contributors:
 
 #include "config.h"
 
+#ifdef INTEL_SGX
+#include "ca_cert.h"
+#include "server_cert.h"
+#include "server_key.h"
+#endif
+
 #ifdef __wasi__
 #include <arpa/inet.h>
 #include <ifaddrs.h>
@@ -489,14 +495,22 @@ int net__load_certificates(struct mosquitto__listener *listener)
 	}else{
 		SSL_CTX_set_verify(listener->ssl_ctx, SSL_VERIFY_NONE, client_certificate_verify);
 	}
+	#ifdef INTEL_SGX
+	rc = wolfSSL_CTX_use_certificate_chain_buffer(listener->ssl_ctx, server_crt, server_crt_length);
+	#else
 	rc = SSL_CTX_use_certificate_chain_file(listener->ssl_ctx, listener->certfile);
+	#endif
 	if(rc != 1){
 		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load server certificate \"%s\". Check certfile.", listener->certfile);
 		net__print_ssl_error(NULL);
 		return MOSQ_ERR_TLS;
 	}
 	if(listener->tls_engine == NULL){
+#ifdef INTEL_SGX
+		rc = wolfSSL_CTX_use_PrivateKey_buffer(listener->ssl_ctx, server_key, server_key_length, SSL_FILETYPE_PEM);
+#else
 		rc = SSL_CTX_use_PrivateKey_file(listener->ssl_ctx, listener->keyfile, SSL_FILETYPE_PEM);
+#endif
 		if(rc != 1){
 			log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load server key file \"%s\". Check keyfile.", listener->keyfile);
 			net__print_ssl_error(NULL);
@@ -586,6 +600,12 @@ int net__tls_load_verify(struct mosquitto__listener *listener)
 #ifdef WITH_TLS
 	int rc;
 
+#ifdef INTEL_SGX
+	rc = wolfSSL_CTX_load_verify_buffer(listener->ssl_ctx, ca_crt, ca_crt_length, SSL_FILETYPE_PEM);
+	if(rc == 0) {
+		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load embedded CA certificates.");
+	}
+#else
 #  if OPENSSL_VERSION_NUMBER < 0x30000000L
 	if(listener->cafile || listener->capath){
 		rc = SSL_CTX_load_verify_locations(listener->ssl_ctx, listener->cafile, listener->capath);
@@ -616,6 +636,7 @@ int net__tls_load_verify(struct mosquitto__listener *listener)
 			return MOSQ_ERR_TLS;
 		}
 	}
+#  endif
 #  endif
 
 #  if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
@@ -978,7 +999,9 @@ int net__socket_listen(struct mosquitto__listener *listener)
 	/* We need to have at least one working socket. */
 	if(listener->sock_count > 0){
 #ifdef WITH_TLS
+#ifndef INTEL_SGX
 		if(listener->certfile && listener->keyfile){
+			#endif
 			if(net__tls_server_ctx(listener)){
 				return 1;
 			}
@@ -986,7 +1009,10 @@ int net__socket_listen(struct mosquitto__listener *listener)
 			if(net__tls_load_verify(listener)){
 				return 1;
 			}
+#ifndef INTEL_SGX
 		}
+#endif
+
 #  ifdef FINAL_WITH_TLS_PSK
 		if(listener->psk_hint){
 			if(tls_ex_index_context == -1){

@@ -33,6 +33,11 @@ WITH_WOLFSSL:=yes
 # This must be disabled if using openssl < 1.0.
 WITH_TLS_PSK:=yes
 
+# Compile with SGX support
+# this imposes some limits on the broker
+# read more in the README-compiling.md
+INTEL_SGX:=no
+
 # Comment out to disable client threading support.
 WITH_THREADING:=no
 
