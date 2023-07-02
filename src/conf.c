@@ -29,6 +29,10 @@ Contributors:
 #  include <dirent.h>
 #  include <strings.h>
 #endif
+#ifdef INTEL_SGX
+#include <mosquitto_conf.h>
+#include <stdlib.h>
+#endif
 
 #ifdef __wasi__
 #include <errno.h>
@@ -391,6 +395,7 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 	int port_tmp;
 
 	for(i=1; i<argc; i++){
+#ifndef INTEL_SGX 
 		if(!strcmp(argv[i], "-c") || !strcmp(argv[i], "--config-file")){
 			if(i<argc-1){
 				db.config_file = argv[i+1];
@@ -405,10 +410,14 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 			i++;
 		}else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--daemon")){
 			config->daemon = true;
-		}else if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")){
+		}else 
+#endif
+		if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")){
 			print_usage();
 			return MOSQ_ERR_INVAL;
-		}else if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
+		}
+#ifndef INTEL_SGX
+		else if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
 			if(i<argc-1){
 				port_tmp = atoi(argv[i+1]);
 				if(port_tmp<1 || port_tmp>UINT16_MAX){
@@ -429,12 +438,20 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 			i++;
 		}else if(!strcmp(argv[i], "-v") || !strcmp(argv[i], "--verbose")){
 			db.verbose = true;
-		}else{
+		}
+#endif
+		else {
 			fprintf(stderr, "Error: Unknown option '%s'.\n",argv[i]);
 			print_usage();
 			return MOSQ_ERR_INVAL;
 		}
 	}
+
+#ifdef INTEL_SGX
+	// read config from buffer
+	db.config_file = "buffer_conf";
+	config__read(config, false);
+#endif
 
 	if(config->default_listener.bind_interface
 #ifdef WITH_TLS
@@ -760,16 +777,33 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 	char *kpass_sha = NULL, *kpass_sha_bin = NULL;
 	char *keyform ;
 #endif
-
 	*lineno = 0;
 
+#ifdef INTEL_SGX
+	// we cannot separate a constant string
+	// therefore we copy the string first and do a null termination
+    char *tempToken = strndup(mosquitto_conf, strlen(mosquitto_conf));
+    char **tokenToSplit = &tempToken;
+	// now split the string with \n as delimiter
+    char *nextConfLine = strsep(tokenToSplit, "\n");
+	buf = &nextConfLine;
+#endif
+
+#ifdef INTEL_SGX
+	/* Intel SGX: read as input from the mosquitto_conf buffer instead of the file */
+	while(buf != NULL) {
+		(*lineno)++;
+#else
 	while(fgets_extending(buf, buflen, fptr)){
+#endif
 		(*lineno)++;
 		if((*buf)[0] != '#' && (*buf)[0] != 10 && (*buf)[0] != 13){
 			slen = strlen(*buf);
 			if(slen == 0){
 				continue;
 			}
+#ifndef INTEL_SGX
+// as we split the string using \n as delimiter, we need to remove the \n at the end of the string
 			while((*buf)[slen-1] == 10 || (*buf)[slen-1] == 13){
 				(*buf)[slen-1] = 0;
 				slen = strlen(*buf);
@@ -777,6 +811,7 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 					continue;
 				}
 			}
+#endif
 			token = strtok_r((*buf), " ", &saveptr);
 			if(token){
 				if(!strcmp(token, "acl_file")){
@@ -2207,7 +2242,19 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 				}
 			}
 		}
+#ifdef INTEL_SGX
+			// get the next line
+			nextConfLine = strsep(tokenToSplit, "\n");
+			if(nextConfLine == NULL) {
+				buf = NULL;
+			} else {
+				buf = &nextConfLine;
+			}
+#endif
 	}
+#ifdef INTEL_SGX
+	free(tempToken);
+#endif
 	return MOSQ_ERR_SUCCESS;
 }
 
@@ -2230,11 +2277,14 @@ int config__read_file(struct mosquitto__config *config, bool reload, const char 
 	}
 #endif
 
+/* We don't read from a file in Intel SGX but from a buffer*/
+#ifndef INTEL_SGX
 	fptr = mosquitto__fopen(file, "rt", false);
 	if(!fptr){
 		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to open config file %s.", file);
 		return 1;
-	}
+	}	
+#endif
 
 	buflen = 1000;
 	buf = mosquitto__malloc((size_t)buflen);
@@ -2246,7 +2296,9 @@ int config__read_file(struct mosquitto__config *config, bool reload, const char 
 
 	rc = config__read_file_core(config, reload, cr, level, lineno, fptr, &buf, &buflen);
 	mosquitto__free(buf);
+#ifndef INTEL_SGX
 	fclose(fptr);
+#endif
 
 	return rc;
 }

@@ -496,7 +496,7 @@ int net__load_certificates(struct mosquitto__listener *listener)
 		SSL_CTX_set_verify(listener->ssl_ctx, SSL_VERIFY_NONE, client_certificate_verify);
 	}
 	#ifdef INTEL_SGX
-	rc = wolfSSL_CTX_use_certificate_chain_buffer(listener->ssl_ctx, server_crt, server_crt_length);
+	rc = wolfSSL_CTX_use_certificate_chain_buffer(listener->ssl_ctx, server_crt, server_crt_len);
 	#else
 	rc = SSL_CTX_use_certificate_chain_file(listener->ssl_ctx, listener->certfile);
 	#endif
@@ -507,7 +507,7 @@ int net__load_certificates(struct mosquitto__listener *listener)
 	}
 	if(listener->tls_engine == NULL){
 #ifdef INTEL_SGX
-		rc = wolfSSL_CTX_use_PrivateKey_buffer(listener->ssl_ctx, server_key, server_key_length, SSL_FILETYPE_PEM);
+		rc = wolfSSL_CTX_use_PrivateKey_buffer(listener->ssl_ctx, server_key, server_key_len, SSL_FILETYPE_PEM);
 #else
 		rc = SSL_CTX_use_PrivateKey_file(listener->ssl_ctx, listener->keyfile, SSL_FILETYPE_PEM);
 #endif
@@ -601,7 +601,7 @@ int net__tls_load_verify(struct mosquitto__listener *listener)
 	int rc;
 
 #ifdef INTEL_SGX
-	rc = wolfSSL_CTX_load_verify_buffer(listener->ssl_ctx, ca_crt, ca_crt_length, SSL_FILETYPE_PEM);
+	rc = wolfSSL_CTX_load_verify_buffer(listener->ssl_ctx, ca_crt, ca_crt_len, SSL_FILETYPE_PEM);
 	if(rc == 0) {
 		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load embedded CA certificates.");
 	}

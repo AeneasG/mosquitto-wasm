@@ -36,7 +36,7 @@ WITH_TLS_PSK:=yes
 # Compile with SGX support
 # this imposes some limits on the broker
 # read more in the README-compiling.md
-INTEL_SGX:=no
+TARGET_INTEL_SGX:=yes
 
 # Comment out to disable client threading support.
 WITH_THREADING:=no
@@ -312,6 +312,11 @@ ifeq ($(WITH_TLS),yes)
 		LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_TLS_PSK
 		CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_TLS_PSK
 	endif
+endif
+
+ifeq ($(TARGET_INTEL_SGX),yes)
+	BROKER_CFLAGS:=$(BROKER_CFLAGS) -DINTEL_SGX
+	LIB_CFLAGS:=$(LIB_CFLAGS) -DINTEL_SGX
 endif
 
 ifeq ($(WITH_THREADING),yes)

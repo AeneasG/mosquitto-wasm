@@ -100,8 +100,13 @@ bridge.o : bridge.c mosquitto_broker_internal.h
 bridge_topic.o : bridge_topic.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 
+ifeq ($(TARGET_INTEL_SGX),yes)
+conf.o : conf.c mosquitto_broker_internal.h mosquitto_conf.h
+	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
+else
 conf.o : conf.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
+endif
 
 conf_includedir.o : conf_includedir.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
@@ -181,7 +186,7 @@ mux_epoll.o : mux_epoll.c mosquitto_broker_internal.h
 mux_poll.o : mux_poll.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 
-ifeq ($(INTEL_SGX),yes)
+ifeq ($(TARGET_INTEL_SGX),yes)
 net.o : net.c mosquitto_broker_internal.h ${EMBED_CERTS}
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 else
@@ -327,7 +332,7 @@ plugin_defer.so : plugin_defer.c ../include/mosquitto_plugin.h ../include/mosqui
 plugin_debug.so : plugin_debug.c ../include/mosquitto_plugin.../include/h mosquitto_broker.h mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} -I. -I../lib -fPIC -shared $< -o $@
 
-ifeq ($(INTEL_SGX), yes)
+ifeq ($(TARGET_INTEL_SGX), yes)
 ca_cert.h :
 	cd ../certs && xxd -i ca.crt ../src/ca_cert.h && cd ../src
 		
@@ -336,6 +341,9 @@ server_cert.h :
 
 server_key.h :
 	cd ../certs && xxd -i server.key ../src/server_key.h && cd ../src
+
+mosquitto_conf.h: 
+	cd .. && xxd -i mosquitto.conf src/mosquitto_conf.h && cd src
 endif
 
 install : all
@@ -351,7 +359,7 @@ uninstall :
 	-rm -f "${DESTDIR}${prefix}/include/mosquitto_plugin.h"
 
 clean :
-	-rm -f *.o mosquitto *.gcda *.gcno *.wasm
+	-rm -f *.o mosquitto *.gcda *.gcno *.wasm mosquitto_conf.h server_cert.h server_key.h ca_cert.h
 
 reallyclean : clean
 	-rm -rf *.orig *.db
