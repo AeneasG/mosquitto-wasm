@@ -36,7 +36,7 @@ WITH_TLS_PSK:=yes
 # Compile with SGX support
 # this imposes some limits on the broker
 # read more in the README-compiling.md
-TARGET_INTEL_SGX:=yes
+TARGET_INTEL_SGX?=no
 
 # Comment out to disable client threading support.
 WITH_THREADING:=no
