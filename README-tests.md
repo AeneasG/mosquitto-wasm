@@ -40,10 +40,10 @@ make RUNTARGET=WASM test
 ```
 
 ## Current state of the tests in WASM
-* broker: Most tests pass, some not (especially related to plugin, invalid-utf8 and long topics)
+* broker: Tests pass except those testing signal handling
 * client: Tests work in general; not possible from stdinput
-* lib: Tests are working (if compiled without THREADING): use static instead of shared library; two async qos tests fail and are removed for WASM
+* lib: Tests are working (if compiled without THREADING): use static instead of shared library
 * old: not covered / might be working or not
 * random: not working out of the box as plugin and websocket support is missing; can made be running but is not a clear test case anyway
-* ssl: not yet covered
+* ssl: work in general except for tests regarding CRL
 * unit: tests are not yet working due to missing working version of CUnit in WASM

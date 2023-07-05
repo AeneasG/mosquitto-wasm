@@ -706,7 +706,6 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 #ifndef WIN32
 	bool interface_bound = false;
 #endif
-    memset(&hints, 0, sizeof(struct addrinfo));
 
 	if(!listener) return MOSQ_ERR_INVAL;
 

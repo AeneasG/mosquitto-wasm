@@ -201,9 +201,7 @@ DltLogLevelType get_dlt_level(unsigned int priority)
 static int log__vprintf(unsigned int priority, const char *fmt, va_list va)
 {
 	const char *topic;
-
 	int syslog_priority;
-
 	char log_line[1000];
 	size_t log_line_pos;
 #ifdef WIN32
@@ -223,57 +221,57 @@ static int log__vprintf(unsigned int priority, const char *fmt, va_list va)
 		switch(priority){
 			case MOSQ_LOG_SUBSCRIBE:
 				topic = "$SYS/broker/log/M/subscribe";
-#if !defined(WIN32)
+#ifndef WIN32
 				syslog_priority = LOG_NOTICE;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_INFORMATION_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_UNSUBSCRIBE:
 				topic = "$SYS/broker/log/M/unsubscribe";
-#if !defined(WIN32)
+#ifndef WIN32
 				syslog_priority = LOG_NOTICE;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_INFORMATION_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_DEBUG:
 				topic = "$SYS/broker/log/D";
-#if !defined(WIN32)
+#ifndef WIN32
 				syslog_priority = LOG_DEBUG;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_INFORMATION_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_ERR:
 				topic = "$SYS/broker/log/E";
-#if !defined(WIN32)
+#ifndef WIN32
 				syslog_priority = LOG_ERR;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_ERROR_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_WARNING:
 				topic = "$SYS/broker/log/W";
-#if !defined(WIN32)
+#ifndef WIN32
 				syslog_priority = LOG_WARNING;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_WARNING_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_NOTICE:
 				topic = "$SYS/broker/log/N";
-#if !defined(WIN32)
+#ifndef WIN32
 				syslog_priority = LOG_NOTICE;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_INFORMATION_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_INFO:
 				topic = "$SYS/broker/log/I";
-#if !defined(WIN32)
+#ifndef WIN32
 				syslog_priority = LOG_INFO;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_INFORMATION_TYPE;
 #endif
 				break;
@@ -289,9 +287,9 @@ static int log__vprintf(unsigned int priority, const char *fmt, va_list va)
 #endif
 			default:
 				topic = "$SYS/broker/log/E";
-#if !defined(WIN32)
+#ifndef WIN32
 				syslog_priority = LOG_ERR;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_ERROR_TYPE;
 #endif
 		}

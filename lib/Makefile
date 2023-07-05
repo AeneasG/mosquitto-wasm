@@ -49,7 +49,6 @@ MOSQ_OBJS=mosquitto.o \
 ALL_DEPS:=
 
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
-# TODO probably revert this
 ifneq ($(RUNTARGET), WASM)
 	ALL_DEPS+=libmosquitto.so.${SOVERSION}
 endif
