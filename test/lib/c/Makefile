@@ -5,7 +5,7 @@ include ../../../config.mk
 CFLAGS=-I../../../include -Werror
 # use static lib for WASM
 ifeq ($(RUNTARGET), WASM)
-LIBS=-I../../../lib -L../../../lib -lmosquitto $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c -I/opt/wasm-micro-runtime/core/iwasm/libraries/lib-socket/inc  -D_WASI_EMULATED_SIGNAL -Wl,-lwasi-emulated-signal
+LIBS=-I../../../lib -L../../../lib -lmosquitto $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc  -D_WASI_EMULATED_SIGNAL -Wl,-lwasi-emulated-signal
 else
 LIBS=../../../lib/libmosquitto.so.1
 endif
