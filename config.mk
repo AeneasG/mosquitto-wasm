@@ -180,7 +180,7 @@ ifeq ($(RUNTARGET), WASM)
 		LDFLAGS:=${LDFLAGS} -lpthread -Wl,--initial-memory=196608 -Wl,--export=__main_argc_argv -Wl,--export=__heap_base -Wl,--export=__data_end
 	endif
 
-    LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=$(WASI_SDK_PATH)/share/wasi-sysroot/share/wasm32-wasi-threads/defined-symbols.txt --sysroot=/opt/wasi-sdk/share/wasi-sysroot/ ${INCS}
+    LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=$(WASI_SDK_PATH)/share/wasi-sysroot/share/wasm32-wasi-threads/defined-symbols.txt --sysroot=$(WASI_SDK_PATH)/share/wasi-sysroot/ ${INCS}
 endif
 
 
