@@ -296,6 +296,9 @@ ifeq ($(WITH_TLS),yes)
 		CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_WOLFSSL
 		LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_WOLFSSL
 	else
+		ifeq ($(TARGET_WASM), yes)
+			ERROR_MSG:="OpenSSL is not available in WASM. Please use WolfSSL instead."
+		endif
 		BROKER_LDADD:=$(BROKER_LDADD) -lssl -lcrypto
 		LIB_LIBADD:=$(LIB_LIBADD) -lssl -lcrypto
 		PASSWD_LDADD:=$(PASSWD_LDADD) -lcrypto

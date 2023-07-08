@@ -62,6 +62,10 @@ mosquitto :
 ifeq ($(UNAME),Darwin)
 	$(error Please compile using CMake on Mac OS X)
 endif
+# if error message is set, print it and exit
+ifdef ERROR_MSG
+	$(error $(ERROR_MSG))
+endif
 
 	set -e; for d in ${DIRS}; do $(MAKE) -C $${d}; done
 
