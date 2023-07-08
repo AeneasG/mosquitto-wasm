@@ -2,7 +2,7 @@ include ../config.mk
 
 .PHONY: all install uninstall clean reallyclean
 
-all : mosquitto$(ENDING)
+all : mosquitto
 
 OBJS=	mosquitto.o \
 		alias_mosq.o \
@@ -81,7 +81,7 @@ OBJS=	mosquitto.o \
 		will_mosq.o \
 		xtreport.o
 
-mosquitto$(ENDING) : ${OBJS}
+mosquitto : ${OBJS}
 	${CROSS_COMPILE}${CC} ${BROKER_LDFLAGS} $^ -o $@ $(BROKER_LDADD)
 
 mosquitto.o : mosquitto.c mosquitto_broker_internal.h
@@ -331,7 +331,7 @@ uninstall :
 	-rm -f "${DESTDIR}${prefix}/include/mosquitto_plugin.h"
 
 clean :
-	-rm -f *.o mosquitto *.gcda *.gcno *.wasm
+	-rm -f *.o mosquitto *.gcda *.gcno
 
 reallyclean : clean
 	-rm -rf *.orig *.db

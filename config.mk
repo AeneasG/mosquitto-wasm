@@ -161,15 +161,12 @@ else
 	CFLAGS?=-Wall -ggdb -O2 -Wconversion -Wextra
 endif
 
-ENDING:=
-
 ifeq ($(TARGET_WASM), yes)
 	WAMR_PATH ?= /opt/wasm-micro-runtime
 	WASI_SDK_PATH?= /opt/wasi-sdk
 	CROSS_COMPILE = $(WASI_SDK_PATH)/bin/
 	CC = clang
 	INCS += -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
-    ENDING:=.wasm
 	LDFLAGS:=${LDFLAGS} -z stack-size=1638400
 	ifeq ($(WITH_TLS), yes)
 		INCS:=${INCS} -I/usr/local/include
