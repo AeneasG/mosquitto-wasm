@@ -3,16 +3,19 @@ include ../config.mk
 .PHONY: all install uninstall reallyclean clean static static_pub static_sub static_rr
 
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
+# For WASM, we always statically link as dynamic linking is experimental only
+# Consequentely, libmosquitto.so is not a dependency
 ifneq ($(TARGET_WASM), yes)
 SHARED_DEP:=../lib/libmosquitto.so.${SOVERSION}
 endif
 endif
 
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
-ifneq ($(TARGET_WASM), yes)
-ALL_DEPS:= mosquitto_pub mosquitto_sub mosquitto_rr
-else
+ifeq ($(TARGET_WASM), yes)
+# For WASM, we always statically link as dynamic linking is experimental only
 ALL_DEPS:= static_pub static_sub static_rr
+else
+ALL_DEPS:= mosquitto_pub mosquitto_sub mosquitto_rr
 endif
 else
 ifeq ($(WITH_STATIC_LIBRARIES),yes)

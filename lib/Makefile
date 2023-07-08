@@ -49,9 +49,7 @@ MOSQ_OBJS=mosquitto.o \
 ALL_DEPS:=
 
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
-ifneq ($(TARGET_WASM), yes)
 	ALL_DEPS+=libmosquitto.so.${SOVERSION}
-endif
 endif
 
 ifeq ($(WITH_STATIC_LIBRARIES),yes)
@@ -60,6 +58,7 @@ endif
 
 all : ${ALL_DEPS}
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
+# we don't build the C++ library for WASM
 ifneq ($(TARGET_WASM), yes)
 	$(MAKE) -C cpp
 endif
@@ -68,10 +67,8 @@ endif
 install : all
 	$(INSTALL) -d "${DESTDIR}${libdir}/"
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
-ifneq ($(TARGET_WASM), yes)
 	$(INSTALL) ${STRIP_OPTS} libmosquitto.so.${SOVERSION} "${DESTDIR}${libdir}/libmosquitto.so.${SOVERSION}"
 	ln -sf libmosquitto.so.${SOVERSION} "${DESTDIR}${libdir}/libmosquitto.so"
-endif
 endif
 ifeq ($(WITH_STATIC_LIBRARIES),yes)
 	$(INSTALL) ${STRIP_OPTS} libmosquitto.a "${DESTDIR}${libdir}/libmosquitto.a"
@@ -83,6 +80,7 @@ endif
 	$(INSTALL) -m644 ../libmosquitto.pc.in "${DESTDIR}${libdir}/pkgconfig/libmosquitto.pc"
 	sed ${SEDINPLACE} -e "s#@CMAKE_INSTALL_PREFIX@#${prefix}#" -e "s#@VERSION@#${VERSION}#" "${DESTDIR}${libdir}/pkgconfig/libmosquitto.pc"
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
+# we don't install the C++ library for WASM as it is not built
 ifneq ($(TARGET_WASM), yes)
 	$(MAKE) -C cpp install
 endif
