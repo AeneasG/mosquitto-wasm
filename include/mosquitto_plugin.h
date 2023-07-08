@@ -61,7 +61,11 @@ struct mosquitto_auth_opt {
 struct mosquitto_acl_msg {
 	const char *topic;
 	const void *payload;
+#ifdef __wasi__
 	uint32_t payloadlen;
+#else
+	long payloadlen;
+#endif
 	int qos;
 	bool retain;
 };

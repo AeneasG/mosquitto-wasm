@@ -605,6 +605,7 @@ void net__print_ssl_error(struct mosquitto *mosq)
 
 int net__socket_connect_tls(struct mosquitto *mosq)
 {
+	int ret, err;
 	long res;
 
 	ERR_clear_error();
@@ -944,10 +945,11 @@ int net__socket_connect_step3(struct mosquitto *mosq, const char *host)
 		SSL_set_bio(mosq->ssl, bio, bio);
 
 #ifdef WITH_WOLFSSL
-		// we have WOLFSSL to tell here to verify the domain name
-		// otherwise the mosquitto__server_certificate_verify callback is not called
-		// even though registered
-		// on the other hand, wolfSSL will handle verification for us
+        /**
+         * we have WOLFSSL to tell here to verify the domain name
+         * otherwise the mosquitto__server_certificate_verify callback is not called
+         * even though registered
+         */
 		if(wolfSSL_check_domain_name(mosq->ssl, host) == SSL_FAILURE) {
 			net__socket_close(mosq);
 			return MOSQ_ERR_TLS;

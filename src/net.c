@@ -765,7 +765,11 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 	rc = getaddrinfo(listener->host, service, &hints, &ainfo);
 #endif
 	if (rc){
+#ifdef __wasi__
 		log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", strerror(errno));
+#else
+		perror("getaddrinfo");
+#endif
 		return INVALID_SOCKET;
 	}
 
