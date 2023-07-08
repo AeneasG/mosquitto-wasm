@@ -17,16 +17,20 @@
 # Uncomment to compile the broker with tcpd/libwrap support.
 #WITH_WRAP:=yes
 
+# Comment in if you like to compile to WASM. 
+# Please note about supported features if using WASM
+# by reading the README-compiling file.
+TARGET_WASM=yes
+
 # Comment out to disable SSL/TLS support in the broker and client.
 # Disabling this will also mean that passwords must be stored in plain text. It
 # is strongly recommended that you only disable WITH_TLS if you are not using
 # password authentication at all.
 WITH_TLS:=yes
 
+# Comment in to use WolfSSL instead of OpenSSL for the broker and the client.
+# Note that if you compile to WASM, only WolfSSL is supported.
 WITH_WOLFSSL:=yes
-
-# Add debugging information
-# CFLAGS:=-g
 
 # Comment out to disable TLS/PSK support in the broker and client. Requires
 # WITH_TLS=yes.
@@ -146,7 +150,6 @@ DB_HTML_XSL=man/html.xsl
 
 UNAME:=$(shell uname -s)
 ARCH:=$(shell uname -p)
-RUNTARGET?=x86_64-linux-gnu
 
 ifeq ($(UNAME),SunOS)
 	ifeq ($(CC),cc)
@@ -160,7 +163,7 @@ endif
 
 ENDING:=
 
-ifeq ($(RUNTARGET), WASM)
+ifeq ($(TARGET_WASM), yes)
 	WAMR_PATH ?= /opt/wasm-micro-runtime
 	WASI_SDK_PATH?= /opt/wasi-sdk
 	CROSS_COMPILE = $(WASI_SDK_PATH)/bin/
@@ -212,7 +215,7 @@ PLUGIN_CPPFLAGS:=$(CPPFLAGS) -I../.. -I../../include
 PLUGIN_CFLAGS:=$(CFLAGS) -fPIC
 PLUGIN_LDFLAGS:=$(LDFLAGS)
 
-ifeq ($(RUNTARGET), WASM)
+ifeq ($(TARGET_WASM), yes)
 	PLUGIN_LDFLAGS:=$(PLUGIN_LDFLAGS) -Wl,--no-entry -Wl,--export-all -Wl,--allow-undefined
 	BROKER_LDFLAGS:=$(BROKER_LDFLAGS) $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c
 	CLIENT_LDFLAGS:=$(CLIENT_LDFLAGS) $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c
@@ -220,7 +223,7 @@ endif
 
 ifneq ($(or $(findstring $(UNAME),FreeBSD), $(findstring $(UNAME),OpenBSD), $(findstring $(UNAME),NetBSD)),)
 	BROKER_LDADD:=$(BROKER_LDADD) -lm
-	ifneq ($(RUNTARGET), WASM)
+	ifneq ($(TARGET_WASM), yes)
 		BROKER_LDFLAGS:=$(BROKER_LDFLAGS) -Wl,--dynamic-list=linker.syms
 	endif
 	SEDINPLACE:=-i ""
@@ -231,7 +234,7 @@ endif
 
 ifeq ($(UNAME),Linux)
 	BROKER_LDADD:=$(BROKER_LDADD) -lrt
-	ifneq ($(RUNTARGET), WASM)
+	ifneq ($(TARGET_WASM), yes)
 		BROKER_LDFLAGS:=$(BROKER_LDFLAGS) -Wl,--dynamic-list=linker.syms
 	endif
 	LIB_LIBADD:=$(LIB_LIBADD) -lrt
@@ -265,7 +268,7 @@ else
 endif
 
 ifneq ($(UNAME),SunOS)
-	ifneq ($(RUNTARGET), WASM)
+	ifneq ($(TARGET_WASM), yes)
 		LIB_LDFLAGS:=$(LIB_LDFLAGS) -Wl,--version-script=linker.version -Wl,-soname,libmosquitto.so.$(SOVERSION)
 	endif
 endif
@@ -310,7 +313,7 @@ ifeq ($(WITH_TLS),yes)
 endif
 
 ifeq ($(WITH_THREADING),yes)
-	ifneq ($(RUNTARGET), WASM)
+	ifneq ($(TARGET_WASM), yes)
 		LIB_LDFLAGS:=$(LIB_LDFLAGS) -pthread
 		STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -pthread
 	endif

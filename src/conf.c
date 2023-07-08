@@ -115,13 +115,11 @@ static int conf__attempt_resolve(const char *host, const char *text, unsigned in
 			log__printf(NULL, log, "%s: Error resolving %s.", msg, text);
         }
 #elif defined(__wasi__)
-        if(rc != 0) {
-            if(errno == ENOENT) {
-                log__printf(NULL, log, "%s: Unable to resolve %s %s.", msg, text, host);
-            } else if (errno == EACCES) {
-                log__printf(NULL, log, "%s: Error resolving %s: %s.", msg, text, strerror(errno));
-            }
-        }
+		if(errno == ENOENT){
+			log__printf(NULL, log, "%s: Unable to resolve %s %s.", msg, text, host);
+		}else{
+			log__printf(NULL, log, "%s: Error resolving %s: %s.", msg, text, strerror(errno));
+		}
 #endif
 		return MOSQ_ERR_INVAL;
 	}

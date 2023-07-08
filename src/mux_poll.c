@@ -88,7 +88,7 @@ int mux_poll__init(struct mosquitto__listener_sock *listensock, int listensock_c
 #ifdef WIN32
 	pollfd_max = (size_t)_getmaxstdio();
 #elif defined(__wasi__)
-    // TODO how can we come up with a value?
+	/* sysconf(_SC_OPEN_MAX) returns -1 in wasi, we use a constant instead */
     pollfd_max = 16;
 #else
 	pollfd_max = (size_t)sysconf(_SC_OPEN_MAX);

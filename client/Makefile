@@ -3,13 +3,13 @@ include ../config.mk
 .PHONY: all install uninstall reallyclean clean static static_pub static_sub static_rr
 
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
-ifneq ($(RUNTARGET), WASM)
+ifneq ($(TARGET_WASM), yes)
 SHARED_DEP:=../lib/libmosquitto.so.${SOVERSION}
 endif
 endif
 
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
-ifneq ($(RUNTARGET), WASM)
+ifneq ($(TARGET_WASM), yes)
 ALL_DEPS:= mosquitto_pub mosquitto_sub mosquitto_rr
 else
 ALL_DEPS:= static_pub static_sub static_rr

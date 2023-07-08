@@ -105,7 +105,7 @@ sudo make install
 sudo ldconfig 
 ```
 
-3. Prepare build of WolfSSL for WASM
+3. Build WolfSSL for WASM
 Go to `wolfssl/wolfio.h` and add the following lines at the top of the file
 
 ```c
@@ -115,14 +115,11 @@ Go to `wolfssl/wolfio.h` and add the following lines at the top of the file
 #endif
 ```
 
-Then, in `$WOLFSSLROOT/IDE/Wasm/wasm_static.mk` add to the `Wolfssl_C_Extra_Flags` the following flags
+Then, build wolfssl as described in `$WOLFSSLROOT/IDE/Wasm/README.md` but add the following flags to `Wolfssl_C_Extra_Flags`
 ``-DHAVE_OCSP -DHAVE_CERTIFICATE_STATUS_REQUEST -DOPENSSL_EXTRA -DOPENSSL_ALL -DHAVE_EX_DATA -DSESSION_CERTS -DWOLFSSL_SYS_CA_CERTS -DOPENSSL_COMPATIBLE_DEFAULTS``
 
-4. Build WolfSSL for WASM
+4. Copy wolfssl lib
 ````bash
-cd $WOLFSSLROOT/IDE/Wasm
-make -f wasm_static.mk clean
-make -f wasm_static.mk all
 sudo cp libwolfssl.a /usr/local/lib/libwolfssl.a
 ````
 
