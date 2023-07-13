@@ -1242,9 +1242,6 @@ int net__socketpair(mosq_sock_t *pairR, mosq_sock_t *pairW)
 		return MOSQ_ERR_SUCCESS;
 	}
 	return MOSQ_ERR_UNKNOWN;
-#elif __wasi__
-    log__printf(NULL, MOSQ_LOG_ERR, "ERROR: WASI does not support socket pairs.");
-    return MOSQ_ERR_ERRNO;
 #else
 	int sv[2];
 

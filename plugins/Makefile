@@ -8,10 +8,7 @@ DIRS= \
 .PHONY : all binary check clean reallyclean test install uninstall
 
 all :
-# don't build plugins for WASM target
-ifneq ($(TARGET_WASM),yes))
 	set -e; for d in ${DIRS}; do $(MAKE) -C $${d}; done
-endif
 
 binary :
 	set -e; for d in ${DIRS}; do $(MAKE) -C $${d} $@; done
