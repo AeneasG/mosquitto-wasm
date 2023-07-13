@@ -280,7 +280,9 @@ int mosquitto_tls_insecure_set(struct mosquitto *mosq, bool value)
 int mosquitto_string_option(struct mosquitto *mosq, enum mosq_opt_t option, const char *value)
 {
 #ifdef WITH_TLS
+#ifndef WITH_WOLFSSL
 	ENGINE *eng;
+#endif
 	char *str;
 #endif
 

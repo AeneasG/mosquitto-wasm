@@ -1135,7 +1135,7 @@ int net__socket_nonblock(mosq_sock_t *sock)
 }
 
 
-#ifndef WITH_BROKER
+#if !defined(WITH_BROKER) && !defined(__wasi__)
 int net__socketpair(mosq_sock_t *pairR, mosq_sock_t *pairW)
 {
 #ifdef WIN32
