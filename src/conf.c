@@ -446,7 +446,7 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 	}
 
 #ifdef INTEL_SGX
-	// read config from buffer
+	/* read config from buffer */
 	db.config_file = "buffer_conf";
 	config__read(config, false);
 #endif
@@ -790,7 +790,6 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 #ifdef INTEL_SGX
 	/* Intel SGX: read as input from the mosquitto_conf buffer instead of the file */
 	while(buf != NULL) {
-		(*lineno)++;
 #else
 	while(fgets_extending(buf, buflen, fptr)){
 #endif

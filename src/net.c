@@ -715,7 +715,7 @@ static int net__bind_interface(struct mosquitto__listener *listener, struct addr
 }
 #endif
 
-#ifdef __wasi__
+#if defined(__wasi__) && !defined(INTEL_SGX)
 int net__wasm_getaddrinfo_broker(struct mosquitto__listener *listener, const char *service, struct addrinfo *hints, struct addrinfo **ainfo) {
 	/**
 	 * This is a wrapper for the WASI implementation of getaddrinfo.
@@ -779,8 +779,35 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 
 	snprintf(service, 10, "%d", listener->port);
     memset(&hints, 0, sizeof(struct addrinfo));
+#ifdef INTEL_SGX
+	if(!(listener->socket_domain)){
+		log__printf(NULL, MOSQ_LOG_ERR, "IntelSGX must specify a socket domain.");
+		return INVALID_SOCKET;
+	}
+	struct addrinfo *ainfo = malloc(sizeof(struct addrinfo));
+	memset(ainfo, 0, sizeof(struct addrinfo));
+	ainfo->ai_family = listener->socket_domain;
+	ainfo->ai_socktype = SOCK_STREAM;
+	ainfo->ai_protocol = IPPROTO_TCP;
 
-#ifdef __wasi__
+	if((listener->socket_domain) == AF_INET) {
+		ainfo->ai_addrlen = sizeof(struct sockaddr_in);
+		ainfo->ai_addr = malloc(sizeof(struct sockaddr_in));
+		memset(ainfo->ai_addr, 0, sizeof(struct sockaddr_in));
+		((struct sockaddr_in *)ainfo->ai_addr)->sin_family = AF_INET;
+		((struct sockaddr_in *)ainfo->ai_addr)->sin_port = htons(listener->port);
+		inet_pton(AF_INET, listener->host, &((struct sockaddr_in *)ainfo->ai_addr)->sin_addr);
+	} else {
+		ainfo->ai_addrlen = sizeof(struct sockaddr_in6);
+		ainfo->ai_addr = malloc(sizeof(struct sockaddr_in6));
+		memset(ainfo->ai_addr, 0, sizeof(struct sockaddr_in6));
+		((struct sockaddr_in6 *)ainfo->ai_addr)->sin6_family = AF_INET6;
+		((struct sockaddr_in6 *)ainfo->ai_addr)->sin6_port = htons(listener->port);
+		inet_pton(AF_INET6, listener->host, &((struct sockaddr_in6 *)ainfo->ai_addr)->sin6_addr);
+	}
+	rc = 0;
+
+#elif defined(__wasi__)
     rc = net__wasm_getaddrinfo_broker(listener, service, &hints, &ainfo);
 #else
     hints.ai_flags = AI_PASSIVE;
@@ -804,39 +831,6 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 
 	listener->sock_count = 0;
 	listener->socks = NULL;
-
-	// TODO in theory we could do the following:
-	// if the listener already specifies a socket domain, then we can just use that
-	// if not, then we try to use IPv4 and IPv6 both
-	// here we simply assume we always like to do both
-	// allocate space for an addrinfo
-
-	struct addrinfo *ainfo = malloc(sizeof(struct addrinfo));
-	memset(ainfo, 0, sizeof(struct addrinfo));
-	ainfo->ai_family = AF_INET;
-	ainfo->ai_socktype = SOCK_STREAM;
-	ainfo->ai_protocol = IPPROTO_TCP;
-	ainfo->ai_addrlen = sizeof(struct sockaddr_in);
-	ainfo->ai_addr = malloc(sizeof(struct sockaddr_in));
-	memset(ainfo->ai_addr, 0, sizeof(struct sockaddr_in));
-	((struct sockaddr_in *)ainfo->ai_addr)->sin_family = AF_INET;
-	((struct sockaddr_in *)ainfo->ai_addr)->sin_port = htons(listener->port);
-	((struct sockaddr_in *)ainfo->ai_addr)->sin_addr.s_addr = htonl(INADDR_ANY);
-
-	// do the same for IpV6
-	// struct addrinfo *ainfoIpV6 = malloc(sizeof(struct addrinfo));
-	// memset(ainfoIpV6, 0, sizeof(struct addrinfo));
-	// ainfoIpV6->ai_family = AF_INET6;
-	// ainfoIpV6->ai_socktype = SOCK_STREAM;
-	// ainfoIpV6->ai_protocol = IPPROTO_TCP;
-	// ainfoIpV6->ai_addrlen = sizeof(struct sockaddr_in6);
-	// ainfoIpV6->ai_addr = malloc(sizeof(struct sockaddr_in6));
-	// memset(ainfoIpV6->ai_addr, 0, sizeof(struct sockaddr_in6));
-	// ((struct sockaddr_in6 *)ainfoIpV6->ai_addr)->sin6_family = AF_INET6;
-	// ((struct sockaddr_in6 *)ainfoIpV6->ai_addr)->sin6_port = htons(listener->port);
-	// ((struct sockaddr_in6 *)ainfoIpV6->ai_addr)->sin6_addr = in6addr_any;
-
-	// ainfo->ai_next = ainfoIpV6;
 
 	for(rp = ainfo; rp; rp = rp->ai_next){
 		if(rp->ai_family == AF_INET){
