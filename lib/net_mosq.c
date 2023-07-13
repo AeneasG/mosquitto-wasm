@@ -410,6 +410,43 @@ int net__try_connect_step2(struct mosquitto *mosq, uint16_t port, mosq_sock_t *s
 
 #endif
 
+#ifdef __wasi__
+int net__wasm_getaddrinfo(const char *host, struct addrinfo *hints, struct addrinfo **ainfo) {
+	/**
+	 * This is a wrapper for the WASI implementation of getaddrinfo.
+	 * It is necessary as the WASI implementation does not support the AF_UNSPEC flag in the address hints
+	 * Consequentely, this method will call getaddrinfo twice, once for IPv4 and once for IPv6
+	 * The results will be merged into a single addrinfo struct
+	 * Returns 0 on success
+	 */
+	int rc;
+	struct addrinfo *rp;
+	if(host == NULL){
+        host = "localhost";
+    }
+
+    struct addrinfo *ainfoIpV6;
+    hints->ai_family = AF_INET;
+    rc = getaddrinfo(host, NULL, hints, ainfo);
+    hints->ai_family = AF_INET6;
+
+	if(rc == 0) {
+		int tryIpV6 = getaddrinfo(host, NULL, hints, &ainfoIpV6);
+
+		if(tryIpV6 == 0) {
+			rp = *ainfo;
+			// combine ainfoIpV4 and ainfoIpV6 into ainfo
+			while(rp->ai_next != NULL) {
+				rp = rp ->ai_next;
+			}
+			rp->ai_next = ainfoIpV6;
+		}
+	} else {
+		rc = getaddrinfo(host, NULL, hints, ainfo);
+	}
+	return rc;
+}
+#endif
 
 static int net__try_connect_tcp(const char *host, uint16_t port, mosq_sock_t *sock, const char *bind_address, bool blocking)
 {
@@ -426,33 +463,7 @@ static int net__try_connect_tcp(const char *host, uint16_t port, mosq_sock_t *so
     hints.ai_socktype = SOCK_STREAM;
 
 #ifdef __wasi__
-    if(host == NULL){
-        host = "localhost";
-    }
-
-    struct addrinfo *ainfoIpV4, *ainfoIpV6;
-    hints.ai_family = AF_INET;
-    int tryIpV4 = getaddrinfo(host, NULL, &hints, &ainfoIpV4);
-    hints.ai_family = AF_INET6;
-    int tryIpV6 = getaddrinfo(host, NULL, &hints, &ainfoIpV6);
-    if(tryIpV6 == 0 && tryIpV4 == 0) {
-        ainfo = ainfoIpV4;
-        rp = ainfo;
-        // combine ainfoIpV4 and ainfoIpV6 into ainfo
-        while(rp->ai_next != NULL) {
-            rp = rp ->ai_next;
-        }
-        rp->ai_next = ainfoIpV6;
-        s = tryIpV6;
-    } else if(tryIpV6 == 0) {
-        ainfo = ainfoIpV6;
-        s = tryIpV6;
-    } else if(tryIpV4 == 0) {
-        ainfo = ainfoIpV4;
-        s = tryIpV4;
-    } else {
-        s = INVALID_SOCKET;
-    }
+    s = net__wasm_getaddrinfo(host, &hints, &ainfo);
 #else
     hints.ai_family = AF_UNSPEC;
     s = getaddrinfo(host, NULL, &hints, &ainfo);
