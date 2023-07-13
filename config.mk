@@ -174,13 +174,13 @@ ifeq ($(TARGET_WASM), yes)
 		LDFLAGS:= ${LDFLAGS} -L./../build_deps
 	endif
 
-	CFLAGS:=${CFLAGS} -Wno-sign-conversion -Wno-unused-function -Wno-unused-parameter -Wno-unused-but-set-variable -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID ${INCS}
+	CFLAGS:=${CFLAGS} -Wno-sign-conversion -D_WASI_EMULATED_GETPID ${INCS}
 	ifeq ($(WITH_THREADING), yes)
 		CFLAGS:=${CFLAGS} --target=wasm32-wasi-threads -pthread
 		LDFLAGS:=${LDFLAGS} -lpthread -Wl,--initial-memory=196608 -Wl,--export=__main_argc_argv -Wl,--export=__heap_base -Wl,--export=__data_end
 	endif
 
-    LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=$(WASI_SDK_PATH)/share/wasi-sysroot/share/wasm32-wasi-threads/defined-symbols.txt --sysroot=$(WASI_SDK_PATH)/share/wasi-sysroot/ ${INCS}
+    LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=$(WASI_SDK_PATH)/share/wasi-sysroot/share/wasm32-wasi-threads/defined-symbols.txt --sysroot=$(WASI_SDK_PATH)/share/wasi-sysroot/ ${INCS}
 endif
 
 

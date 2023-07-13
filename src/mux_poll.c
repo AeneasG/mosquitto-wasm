@@ -35,7 +35,9 @@ Contributors:
 #endif
 
 #include <errno.h>
+#ifndef __wasi__
 #include <signal.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 
@@ -45,7 +47,6 @@ Contributors:
 #define SO_ERROR     4
 #include <sys/socket.h>
 #include <wasi_socket_ext.h>
-#include <signal.h>
 #include <poll.h>
 #endif
 #include <time.h>

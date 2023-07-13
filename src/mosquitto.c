@@ -38,7 +38,9 @@ Contributors:
 #endif
 
 #include <errno.h>
+#ifndef __wasi__
 #include <signal.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #ifdef WITH_SYSTEMD
@@ -399,7 +401,7 @@ static void listeners__stop(void)
 	mosquitto__free(listensock);
 }
 
-
+#ifndef __wasi__
 static void signal__setup(void)
 {
 	signal(SIGINT, handle_sigint);
@@ -416,6 +418,7 @@ static void signal__setup(void)
 	CreateThread(NULL, 0, SigThreadProc, NULL, 0, NULL);
 #endif
 }
+#endif
 
 
 static int pid__write(void)
@@ -547,7 +550,9 @@ int main(int argc, char *argv[])
 	rc = mux__init(listensock, listensock_count);
 	if(rc) return rc;
 
+#ifndef __wasi__
 	signal__setup();
+#endif
 
 #ifdef WITH_BRIDGE
 	bridge__start_all();

@@ -33,7 +33,9 @@ Contributors:
 #  include <openssl/buffer.h>
 #endif
 #endif
+#ifndef __wasi__
 #include <signal.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

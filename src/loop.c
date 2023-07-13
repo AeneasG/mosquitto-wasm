@@ -33,7 +33,9 @@ Contributors:
 #endif
 
 #include <errno.h>
+#ifndef __wasi__
 #include <signal.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #ifdef __wasi__
