@@ -26,7 +26,9 @@ Contributors:
 #include <time.h>
 #ifndef WIN32
 #include <unistd.h>
+#ifndef __wasi__
 #include <signal.h>
+#endif
 #else
 #include <process.h>
 #include <winsock2.h>
@@ -56,7 +58,7 @@ struct mosquitto *g_mosq = NULL;
 static bool timed_out = false;
 static int connack_result = 0;
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__wasi__)
 static void my_signal_handler(int signum)
 {
 	if(signum == SIGALRM){

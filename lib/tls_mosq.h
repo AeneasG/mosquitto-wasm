@@ -29,7 +29,6 @@ Contributors:
 #ifdef WITH_WOLFSSL
 #include <wolfssl/options.h>
 #include <wolfssl/openssl/ssl.h>
-#include <wolfssl/openssl/engine.h>
 #else
 #include <openssl/ssl.h>
 #include <openssl/engine.h>

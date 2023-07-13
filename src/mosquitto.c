@@ -38,7 +38,9 @@ Contributors:
 #endif
 
 #include <errno.h>
+#ifndef __wasi__
 #include <signal.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #ifdef WITH_SYSTEMD
@@ -268,11 +270,7 @@ void listeners__add_websockets(struct lws_context *ws_context, mosq_sock_t fd)
 }
 #endif
 
-static int listeners__add_local(const char *host, uint16_t port
-#ifdef __wasi__
-        , int socket_domain
-#endif
-)
+static int listeners__add_local(const char *host, uint16_t port)
 {
 	struct mosquitto__listener *listeners;
 	listeners = db.config->listeners;
@@ -281,10 +279,6 @@ static int listeners__add_local(const char *host, uint16_t port
 	listeners[db.config->listener_count].security_options.allow_anonymous = true;
 	listeners[db.config->listener_count].port = port;
 	listeners[db.config->listener_count].host = mosquitto__strdup(host);
-#ifdef __wasi__
-    // used implementation of getaddrinfo() cannot resolve without specifying address family
-	listeners[db.config->listener_count].socket_domain = socket_domain;
-#endif
 	if(listeners[db.config->listener_count].host == NULL){
 		return MOSQ_ERR_NOMEM;
 	}
@@ -316,31 +310,15 @@ static int listeners__start_local_only(void)
 	log__printf(NULL, MOSQ_LOG_WARNING, "Create a configuration file which defines a listener to allow remote access.");
 	log__printf(NULL, MOSQ_LOG_WARNING, "For more details see https://mosquitto.org/documentation/authentication-methods/");
 	if(db.config->cmd_port_count == 0){
-		rc = listeners__add_local("127.0.0.1", 1883
-#ifdef __wasi__
-                                  , AF_INET
-#endif
-                                  );
+		rc = listeners__add_local("127.0.0.1", 1883);
 		if(rc == MOSQ_ERR_NOMEM) return MOSQ_ERR_NOMEM;
-// 		rc = listeners__add_local("::1", 1883
-// #ifdef __wasi__
-//                                   , AF_INET6
-// #endif
-//                                   );
+		rc = listeners__add_local("::1", 1883);
 		if(rc == MOSQ_ERR_NOMEM) return MOSQ_ERR_NOMEM;
 	}else{
 		for(i=0; i<db.config->cmd_port_count; i++){
-			rc = listeners__add_local("127.0.0.1", db.config->cmd_port[i]
-#ifdef __wasi__
-                    , AF_INET
-#endif
-            );
+			rc = listeners__add_local("127.0.0.1", db.config->cmd_port[i]);
 			if(rc == MOSQ_ERR_NOMEM) return MOSQ_ERR_NOMEM;
-			rc = listeners__add_local("::1", db.config->cmd_port[i]
-#ifdef __wasi__
-            , AF_INET6
-#endif
-);
+			rc = listeners__add_local("::1", db.config->cmd_port[i]);
 			if(rc == MOSQ_ERR_NOMEM) return MOSQ_ERR_NOMEM;
 		}
 	}
@@ -423,7 +401,7 @@ static void listeners__stop(void)
 	mosquitto__free(listensock);
 }
 
-
+#ifndef __wasi__
 static void signal__setup(void)
 {
 	signal(SIGINT, handle_sigint);
@@ -440,6 +418,7 @@ static void signal__setup(void)
 	CreateThread(NULL, 0, SigThreadProc, NULL, 0, NULL);
 #endif
 }
+#endif
 
 
 static int pid__write(void)
@@ -571,7 +550,9 @@ int main(int argc, char *argv[])
 	rc = mux__init(listensock, listensock_count);
 	if(rc) return rc;
 
+#ifndef __wasi__
 	signal__setup();
+#endif
 
 #ifdef WITH_BRIDGE
 	bridge__start_all();

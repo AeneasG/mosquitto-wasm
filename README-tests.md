@@ -40,10 +40,11 @@ make RUNTARGET=WASM test
 ```
 
 ## Current state of the tests in WASM
-* broker: Most tests pass, some not (especially related to plugin, invalid-utf8 and long topics)
-* client: Tests work in general; not possible from stdinput
-* lib: Tests are working (if compiled without THREADING): use static instead of shared library; two async qos tests fail and are removed for WASM
-* old: not covered / might be working or not
-* random: not working out of the box as plugin and websocket support is missing; can made be running but is not a clear test case anyway
-* ssl: not yet covered
-* unit: tests are not yet working due to missing working version of CUnit in WASM
+* broker: Tests pass except those testing signal handling and SSL tests with CRLs
+* client: Tests pass except for input from stdin due to threading issue
+* lib: Tests are working (if compiled without THREADING), but static lib is used instead of shared lib
+* unit: Tests are not working due to missing working version of CUnit in WASM (missing setjmp support)
+
+Note: To run ssl related tests, move the generated ssl certificates into the folder you are currently testing. E.g. when running tests from `broker` folder, then move / copy the `ssl` folder into the `broker` folder. 
+
+Additionally, you need an excecutable [WAMR runtime](https://github.com/bytecodealliance/wasm-micro-runtime) called `iwasm` in the root of the mosquitto repository. See more information in `README-compiling`.

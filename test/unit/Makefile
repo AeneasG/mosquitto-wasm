@@ -7,7 +7,7 @@ ifeq ($(WITH_BUNDLED_DEPS),yes)
         CPPFLAGS:=$(CPPFLAGS) -I../../deps
 endif
 
-ifeq ($(RUNTARGET), WASM)
+ifeq ($(TARGET_WASM), yes)
 	LDADD:=$(LDADD) -L./../../build_deps
 else
 	CFLAGS:=$(CFLAGS) -coverage
@@ -174,73 +174,17 @@ util_topic.o : ../../lib/util_topic.c
 utf8_mosq.o : ../../lib/utf8_mosq.c
 	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $^
 
-ifeq ($(RUNTARGET), WASM)
-test.o : test.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-datatype_read.o : datatype_read.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-datatype_write.o : datatype_write.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-misc_trim_test.o : misc_trim_test.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-property_add.o : property_add.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-property_read.o : property_read.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-property_user_read.o : property_user_read.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-property_write.o : property_write.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-stubs.o : stubs.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-util_topic_test.o : util_topic_test.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-utf8.o : utf8.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-subs_test.o : subs_test.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-subs_stubs.o : subs_stubs.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-bridge_topic_test.o : bridge_topic_test.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-persist_read_test.o : persist_read_test.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-persist_read_stubs.o : persist_read_stubs.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-persist_write_test.o : persist_write_test.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-
-persist_write_stubs.o : persist_write_stubs.c
-	$(CROSS_COMPILE)$(CC) $(CPPFLAGS) $(CFLAGS) -I/usr/local/include -c -o $@ $^
-endif
-
 build : mosq_test bridge_topic_test persist_read_test persist_write_test subs_test
 
 test-lib : build
-ifeq ($(RUNTARGET), WASM)
+ifeq ($(TARGET_WASM), yes)
 	../../iwasm mosq_test
 else
 	./mosq_test
 endif
 
 test-broker : build
-ifeq ($(RUNTARGET), WASM)
+ifeq ($(TARGET_WASM), yes)
 	../../iwasm bridge_topic_test
 	../../iwasm persist_read_test
 	../../iwasm persist_write_test

@@ -35,15 +35,15 @@ TESTS = ${SRC:.c=.test}
 all : ${PLUGINS} ${TESTS}
 
 ${PLUGINS} : %.so: %.c
-ifeq ($(RUNTARGET), WASM)
-	# TODO fix plugin build
+ifeq ($(TARGET_WASM), yes)
+	# WASM does not support plugins currently
 else
 	$(CC) ${CFLAGS} -fPIC -shared $< -o $@
 endif	
 
 
 ${TESTS} : %.test: %.c
-ifeq ($(RUNTARGET), WASM)
+ifeq ($(TARGET_WASM), yes)
 	# TODO use static library instead of shared library and export the needed stuff
 	# $(CROSS_COMPILE)$(CC) ${CFLAGS} $< -o $@ -I../../../lib -L../../../lib -lmosquitto
 	$(CC) ${CFLAGS} $< -o $@ /usr/local/lib/libmosquitto.so.1

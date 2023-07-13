@@ -23,6 +23,17 @@ Contributors:
 #if !defined(WIN32) && !defined(__wasi__)
 #include <syslog.h>
 #endif
+#ifdef __wasi__
+/* define sys log levels for wasi to be able to use logging to topic */
+#define	LOG_EMERG	0	/* system is unusable */
+#define	LOG_ALERT	1	/* action must be taken immediately */
+#define	LOG_CRIT	2	/* critical conditions */
+#define	LOG_ERR		3	/* error conditions */
+#define	LOG_WARNING	4	/* warning conditions */
+#define	LOG_NOTICE	5	/* normal but significant condition */
+#define	LOG_INFO	6	/* informational */
+#define	LOG_DEBUG	7	/* debug-level messages */
+#endif
 #include <time.h>
 
 #if defined(__APPLE__)
@@ -190,9 +201,7 @@ DltLogLevelType get_dlt_level(unsigned int priority)
 static int log__vprintf(unsigned int priority, const char *fmt, va_list va)
 {
 	const char *topic;
-#ifndef __wasi__
 	int syslog_priority;
-#endif
 	char log_line[1000];
 	size_t log_line_pos;
 #ifdef WIN32
@@ -212,57 +221,57 @@ static int log__vprintf(unsigned int priority, const char *fmt, va_list va)
 		switch(priority){
 			case MOSQ_LOG_SUBSCRIBE:
 				topic = "$SYS/broker/log/M/subscribe";
-#if !defined(WIN32) && !defined(__wasi__)
+#ifndef WIN32
 				syslog_priority = LOG_NOTICE;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_INFORMATION_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_UNSUBSCRIBE:
 				topic = "$SYS/broker/log/M/unsubscribe";
-#if !defined(WIN32) && !defined(__wasi__)
+#ifndef WIN32
 				syslog_priority = LOG_NOTICE;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_INFORMATION_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_DEBUG:
 				topic = "$SYS/broker/log/D";
-#if !defined(WIN32) && !defined(__wasi__)
+#ifndef WIN32
 				syslog_priority = LOG_DEBUG;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_INFORMATION_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_ERR:
 				topic = "$SYS/broker/log/E";
-#if !defined(WIN32) && !defined(__wasi__)
+#ifndef WIN32
 				syslog_priority = LOG_ERR;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_ERROR_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_WARNING:
 				topic = "$SYS/broker/log/W";
-#if !defined(WIN32) && !defined(__wasi__)
+#ifndef WIN32
 				syslog_priority = LOG_WARNING;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_WARNING_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_NOTICE:
 				topic = "$SYS/broker/log/N";
-#if !defined(WIN32) && !defined(__wasi__)
+#ifndef WIN32
 				syslog_priority = LOG_NOTICE;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_INFORMATION_TYPE;
 #endif
 				break;
 			case MOSQ_LOG_INFO:
 				topic = "$SYS/broker/log/I";
-#if !defined(WIN32) && !defined(__wasi__)
+#ifndef WIN32
 				syslog_priority = LOG_INFO;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_INFORMATION_TYPE;
 #endif
 				break;
@@ -278,9 +287,9 @@ static int log__vprintf(unsigned int priority, const char *fmt, va_list va)
 #endif
 			default:
 				topic = "$SYS/broker/log/E";
-#if !defined(WIN32) && !defined(__wasi__)
+#ifndef WIN32
 				syslog_priority = LOG_ERR;
-#elif defined(WIN32)
+#else
 				syslog_priority = EVENTLOG_ERROR_TYPE;
 #endif
 		}
@@ -372,7 +381,7 @@ void log__internal(const char *fmt, ...)
 
 #ifdef WIN32
 	log__printf(NULL, MOSQ_LOG_INTERNAL, "%s", buf);
-#elif !defined(__wasi__)
+#else
 	log__printf(NULL, MOSQ_LOG_INTERNAL, "%s%s%s", "\e[32m", buf, "\e[0m");
 #endif
 }

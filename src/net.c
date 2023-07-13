@@ -715,6 +715,52 @@ static int net__bind_interface(struct mosquitto__listener *listener, struct addr
 }
 #endif
 
+#ifdef __wasi__
+int net__wasm_getaddrinfo_broker(struct mosquitto__listener *listener, const char *service, struct addrinfo *hints, struct addrinfo **ainfo) {
+	/**
+	 * This is a wrapper for the WASI implementation of getaddrinfo.
+	 * It is necessary as the WASI implementation does not support the AF_UNSPEC flag in the address hints
+	 * Consequentely, this method will call getaddrinfo twice, once for IPv4 and once for IPv6 if the socket_domain is unspecified
+	 * The results will be merged into a single addrinfo struct
+	 * The broker version differs from the client version in that it will only return the first result for each address family
+	 * Returns 0 on success
+	 */
+	int rc = 0;
+	hints->ai_socktype = SOCK_STREAM;
+
+    if(listener->host == NULL){
+        listener->host = "localhost";
+    }
+
+    if(listener->socket_domain){
+        hints->ai_family = listener->socket_domain;
+        rc = getaddrinfo(listener->host, service, hints, ainfo);
+    } else {
+        struct addrinfo *ainfoIpV6;
+        hints->ai_family = AF_INET;
+        rc = getaddrinfo(listener->host, service, hints, ainfo);
+		/* IPv4 getaddrinfo can return multiple addresses, but we only want the first one */
+		if(rc == 0 && (*ainfo)->ai_next != NULL) {
+			freeaddrinfo((*ainfo)->ai_next);
+			(*ainfo)->ai_next = NULL;
+		}
+		hints->ai_family = AF_INET6;
+		if(rc != 0) {
+			freeaddrinfo(*ainfo);
+			*ainfo = NULL;
+
+        	rc = getaddrinfo(listener->host, service, hints, ainfo);
+		} else {
+			int tryIpV6 = getaddrinfo(listener->host, service, hints, &ainfoIpV6);
+
+			if(tryIpV6 == 0) {
+				(*ainfo)->ai_next = ainfoIpV6;
+			}
+		}
+    }
+	return rc;
+}
+#endif
 
 static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 {
@@ -728,69 +774,33 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 #ifndef WIN32
 	bool interface_bound = false;
 #endif
-    memset(&hints, 0, sizeof(struct addrinfo));
 
 	if(!listener) return MOSQ_ERR_INVAL;
 
 	snprintf(service, 10, "%d", listener->port);
     memset(&hints, 0, sizeof(struct addrinfo));
 
-// #ifdef __wasi__
-//     hints.ai_socktype = SOCK_STREAM;
+#ifdef __wasi__
+    rc = net__wasm_getaddrinfo_broker(listener, service, &hints, &ainfo);
+#else
+    hints.ai_flags = AI_PASSIVE;
+    hints.ai_socktype = SOCK_STREAM;
 
-//     if(listener->host == NULL){
-//         listener->host = "localhost";
-//     }
-
-//     if(listener->socket_domain){
-//         hints.ai_family = listener->socket_domain;
-//         rc = getaddrinfo(listener->host, service, &hints, &ainfo);
-//     } else {
-//         struct addrinfo *ainfoIpV4, *ainfoIpV6;
-//         hints.ai_family = AF_INET;
-//         int tryIpV4 = getaddrinfo(listener->host, service, &hints, &ainfoIpV4);
-// 		// IPv4 getaddrinfo can return multiple addresses, but we only want the first one
-// 		if(tryIpV4 == 0 && ainfoIpV4->ai_next != NULL) {
-// 			freeaddrinfo(ainfoIpV4->ai_next);
-// 			ainfoIpV4->ai_next = NULL;
-// 		}
-//         hints.ai_family = AF_INET6;
-//         int tryIpV6 = getaddrinfo(listener->host, service, &hints, &ainfoIpV6);
-//         if(tryIpV6 == 0 && tryIpV4 == 0) {
-//             ainfo = ainfoIpV4;
-//             rp = ainfo;
-//             // combine ainfoIpV4 and ainfoIpV6 into ainfo
-//             while(rp->ai_next != NULL) {
-//                 rp = rp ->ai_next;
-//             }
-//             rp->ai_next = ainfoIpV6;
-//             rc = tryIpV6;
-//         } else if(tryIpV6 == 0) {
-//             ainfo = ainfoIpV6;
-//             rc = tryIpV6;
-//         } else if(tryIpV4 == 0) {
-//             ainfo = ainfoIpV4;
-//             rc = tryIpV4;
-//         } else {
-//             log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", strerror(errno));
-//             rc = INVALID_SOCKET;
-//         }
-//     }
-// #else
-//     hints.ai_flags = AI_PASSIVE;
-//     hints.ai_socktype = SOCK_STREAM;
-
-// 	if(listener->socket_domain){
-// 		hints.ai_family = listener->socket_domain;
-// 	}else{
-//         hints.ai_family = AF_UNSPEC;
-// 	}
-// 	rc = getaddrinfo(listener->host, service, &hints, &ainfo);
-// #endif
-// 	if (rc){
-// 		log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", strerror(errno));
-// 		return INVALID_SOCKET;
-// 	}
+	if(listener->socket_domain){
+		hints.ai_family = listener->socket_domain;
+	}else{
+        hints.ai_family = AF_UNSPEC;
+	}
+	rc = getaddrinfo(listener->host, service, &hints, &ainfo);
+#endif
+	if (rc){
+#ifdef __wasi__
+		log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", strerror(errno));
+#else
+		perror("getaddrinfo");
+#endif
+		return INVALID_SOCKET;
+	}
 
 	listener->sock_count = 0;
 	listener->socks = NULL;

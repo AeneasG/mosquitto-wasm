@@ -3,18 +3,19 @@ include ../config.mk
 .PHONY: all install uninstall reallyclean clean static static_pub static_sub static_rr
 
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
-# TODO probably revert this
-ifneq ($(RUNTARGET), WASM)
+# For WASM, we always statically link as dynamic linking is experimental only
+# Consequentely, libmosquitto.so is not a dependency
+ifneq ($(TARGET_WASM), yes)
 SHARED_DEP:=../lib/libmosquitto.so.${SOVERSION}
 endif
 endif
 
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
-# TODO probably revert this
-ifneq ($(RUNTARGET), WASM)
-ALL_DEPS:= mosquitto_pub mosquitto_sub mosquitto_rr
-else
+ifeq ($(TARGET_WASM), yes)
+# For WASM, we always statically link as dynamic linking is experimental only
 ALL_DEPS:= static_pub static_sub static_rr
+else
+ALL_DEPS:= mosquitto_pub mosquitto_sub mosquitto_rr
 endif
 else
 ifeq ($(WITH_STATIC_LIBRARIES),yes)
@@ -29,13 +30,13 @@ static : static_pub static_sub static_rr
 	# libmosquitto only.
 
 static_pub : pub_client.o pub_shared.o client_props.o client_shared.o ../lib/libmosquitto.a
-	${CROSS_COMPILE}${CC} $^ -o mosquitto_pub$(ENDING) ${CLIENT_LDFLAGS} ${STATIC_LIB_DEPS} ${CLIENT_STATIC_LDADD}
+	${CROSS_COMPILE}${CC} $^ -o mosquitto_pub ${CLIENT_LDFLAGS} ${STATIC_LIB_DEPS} ${CLIENT_STATIC_LDADD}
 
 static_sub : sub_client.o sub_client_output.o client_props.o client_shared.o ../lib/libmosquitto.a
-	${CROSS_COMPILE}${CC} $^ -o mosquitto_sub$(ENDING) ${CLIENT_LDFLAGS} ${STATIC_LIB_DEPS} ${CLIENT_STATIC_LDADD}
+	${CROSS_COMPILE}${CC} $^ -o mosquitto_sub ${CLIENT_LDFLAGS} ${STATIC_LIB_DEPS} ${CLIENT_STATIC_LDADD}
 
 static_rr : rr_client.o client_props.o client_shared.o pub_shared.o sub_client_output.o ../lib/libmosquitto.a
-	${CROSS_COMPILE}${CC} $^ -o mosquitto_rr$(ENDING) ${CLIENT_LDFLAGS} ${STATIC_LIB_DEPS} ${CLIENT_STATIC_LDADD}
+	${CROSS_COMPILE}${CC} $^ -o mosquitto_rr ${CLIENT_LDFLAGS} ${STATIC_LIB_DEPS} ${CLIENT_STATIC_LDADD}
 
 mosquitto_pub : pub_client.o pub_shared.o client_shared.o client_props.o
 	${CROSS_COMPILE}${CC} $(CLIENT_LDFLAGS) $^ -o $@ $(CLIENT_LDADD)
@@ -96,4 +97,4 @@ uninstall :
 reallyclean : clean
 
 clean :
-	-rm -f *.o mosquitto_pub mosquitto_sub mosquitto_rr *.gcda *.gcno *.wasm
+	-rm -f *.o mosquitto_pub mosquitto_sub mosquitto_rr *.gcda *.gcno

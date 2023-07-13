@@ -89,7 +89,7 @@ msg_sequence_test:
 04 :
 	./04-retain-check-source-persist-diff-port.py
 	./04-retain-check-source-persist.py
-ifneq ($(RUNTARGET), WASM) # WASM cannot handle signals currently
+ifneq ($(TARGET_WASM), yes) # WASM cannot handle signals currently
 	./04-retain-check-source.py
 endif
 	./04-retain-qos0-clear.py
@@ -158,7 +158,7 @@ endif
 	./08-ssl-connect-no-auth-wrong-ca.py
 	./08-ssl-connect-no-auth.py
 	./08-ssl-connect-no-identity.py
-ifneq ($(RUNTARGET), WASM) # WASM cannot handle signals currently
+ifneq ($(TARGET_WASM), yes) # WASM cannot handle signals currently
 	./08-ssl-hup-disconnect.py
 endif
 ifeq ($(WITH_TLS_PSK),yes)
@@ -170,7 +170,7 @@ endif
 endif
 
 09 :
-ifneq ($(RUNTARGET), WASM) # WASM has no plugin support currently
+ifneq ($(TARGET_WASM), yes) # WASM has no plugin support currently
 	./09-acl-access-variants.py
 	./09-acl-change.py
 	./09-acl-empty-file.py

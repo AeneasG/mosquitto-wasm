@@ -17,16 +17,20 @@
 # Uncomment to compile the broker with tcpd/libwrap support.
 #WITH_WRAP:=yes
 
+# Comment in if you like to compile to WASM. 
+# Please note about supported features if using WASM
+# by reading the README-compiling file.
+TARGET_WASM=yes
+
 # Comment out to disable SSL/TLS support in the broker and client.
 # Disabling this will also mean that passwords must be stored in plain text. It
 # is strongly recommended that you only disable WITH_TLS if you are not using
 # password authentication at all.
 WITH_TLS:=yes
 
+# Comment in to use WolfSSL instead of OpenSSL for the broker and the client.
+# Note that if you compile to WASM, only WolfSSL is supported.
 WITH_WOLFSSL:=yes
-
-# Add debugging information
-# CFLAGS:=-g
 
 # Comment out to disable TLS/PSK support in the broker and client. Requires
 # WITH_TLS=yes.
@@ -151,7 +155,6 @@ DB_HTML_XSL=man/html.xsl
 
 UNAME:=$(shell uname -s)
 ARCH:=$(shell uname -p)
-RUNTARGET?=x86_64-linux-gnu
 
 ifeq ($(UNAME),SunOS)
 	ifeq ($(CC),cc)
@@ -163,15 +166,12 @@ else
 	CFLAGS?=-Wall -ggdb -O2 -Wconversion -Wextra
 endif
 
-ENDING:=
-
-ifeq ($(RUNTARGET), WASM)
+ifeq ($(TARGET_WASM), yes)
 	WAMR_PATH ?= /opt/wasm-micro-runtime
 	WASI_SDK_PATH?= /opt/wasi-sdk
 	CROSS_COMPILE = $(WASI_SDK_PATH)/bin/
 	CC = clang
 	INCS += -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
-    ENDING:=.wasm
 	LDFLAGS:=${LDFLAGS} -z stack-size=1638400
 	ifeq ($(WITH_TLS), yes)
 		INCS:=${INCS} -I/usr/local/include
@@ -179,13 +179,13 @@ ifeq ($(RUNTARGET), WASM)
 		LDFLAGS:= ${LDFLAGS} -L./../build_deps
 	endif
 
-	CFLAGS:=${CFLAGS} -Wno-sign-conversion -Wno-unused-function -Wno-unused-parameter -Wno-unused-but-set-variable -D_WASI_EMULATED_SIGNAL -D_WASI_EMULATED_GETPID ${INCS}
+	CFLAGS:=${CFLAGS} -Wno-sign-conversion -D_WASI_EMULATED_GETPID ${INCS}
 	ifeq ($(WITH_THREADING), yes)
 		CFLAGS:=${CFLAGS} --target=wasm32-wasi-threads -pthread
 		LDFLAGS:=${LDFLAGS} -lpthread -Wl,--initial-memory=196608 -Wl,--export=__main_argc_argv -Wl,--export=__heap_base -Wl,--export=__data_end
 	endif
 
-    LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-signal -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=$(WASI_SDK_PATH)/share/wasi-sysroot/share/wasm32-wasi-threads/defined-symbols.txt --sysroot=/opt/wasi-sdk/share/wasi-sysroot/ ${INCS}
+    LDFLAGS:=${LDFLAGS} -Wl,-lwasi-emulated-getpid -Wl,--allow-undefined-file=$(WASI_SDK_PATH)/share/wasi-sysroot/share/wasm32-wasi-threads/defined-symbols.txt --sysroot=$(WASI_SDK_PATH)/share/wasi-sysroot/ ${INCS}
 endif
 
 
@@ -217,7 +217,7 @@ PLUGIN_CPPFLAGS:=$(CPPFLAGS) -I../.. -I../../include
 PLUGIN_CFLAGS:=$(CFLAGS) -fPIC
 PLUGIN_LDFLAGS:=$(LDFLAGS)
 
-ifeq ($(RUNTARGET), WASM)
+ifeq ($(TARGET_WASM), yes)
 	PLUGIN_LDFLAGS:=$(PLUGIN_LDFLAGS) -Wl,--no-entry -Wl,--export-all -Wl,--allow-undefined
 	BROKER_LDFLAGS:=$(BROKER_LDFLAGS) $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c
 	CLIENT_LDFLAGS:=$(CLIENT_LDFLAGS) $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c
@@ -225,7 +225,7 @@ endif
 
 ifneq ($(or $(findstring $(UNAME),FreeBSD), $(findstring $(UNAME),OpenBSD), $(findstring $(UNAME),NetBSD)),)
 	BROKER_LDADD:=$(BROKER_LDADD) -lm
-	ifneq ($(RUNTARGET), WASM)
+	ifneq ($(TARGET_WASM), yes)
 		BROKER_LDFLAGS:=$(BROKER_LDFLAGS) -Wl,--dynamic-list=linker.syms
 	endif
 	SEDINPLACE:=-i ""
@@ -236,7 +236,7 @@ endif
 
 ifeq ($(UNAME),Linux)
 	BROKER_LDADD:=$(BROKER_LDADD) -lrt
-	ifneq ($(RUNTARGET), WASM)
+	ifneq ($(TARGET_WASM), yes)
 		BROKER_LDFLAGS:=$(BROKER_LDFLAGS) -Wl,--dynamic-list=linker.syms
 	endif
 	LIB_LIBADD:=$(LIB_LIBADD) -lrt
@@ -270,7 +270,7 @@ else
 endif
 
 ifneq ($(UNAME),SunOS)
-	ifneq ($(RUNTARGET), WASM)
+	ifneq ($(TARGET_WASM), yes)
 		LIB_LDFLAGS:=$(LIB_LDFLAGS) -Wl,--version-script=linker.version -Wl,-soname,libmosquitto.so.$(SOVERSION)
 	endif
 endif
@@ -301,6 +301,9 @@ ifeq ($(WITH_TLS),yes)
 		CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_WOLFSSL
 		LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_WOLFSSL
 	else
+		ifeq ($(TARGET_WASM), yes)
+			ERROR_MSG:="OpenSSL is not available in WASM. Please use WolfSSL instead."
+		endif
 		BROKER_LDADD:=$(BROKER_LDADD) -lssl -lcrypto
 		LIB_LIBADD:=$(LIB_LIBADD) -lssl -lcrypto
 		PASSWD_LDADD:=$(PASSWD_LDADD) -lcrypto
@@ -320,7 +323,7 @@ ifeq ($(TARGET_INTEL_SGX),yes)
 endif
 
 ifeq ($(WITH_THREADING),yes)
-	ifneq ($(RUNTARGET), WASM)
+	ifneq ($(TARGET_WASM), yes)
 		LIB_LDFLAGS:=$(LIB_LDFLAGS) -pthread
 		STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -pthread
 	endif

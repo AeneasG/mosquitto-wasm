@@ -1,14 +1,17 @@
+include ../config.mk
+
 DIRS= \
 		db_dump \
-		mosquitto_ctrl \
-		mosquitto_passwd
+		mosquitto_ctrl
+
+ifneq ($(TARGET_WASM), yes)
+	DIRS+= mosquitto_passwd
+endif
 
 .PHONY : all binary check clean reallyclean test install uninstall
 
 all :
-ifneq ($(RUNTARGET), WASM)
 	set -e; for d in ${DIRS}; do $(MAKE) -C $${d}; done
-endif
 binary :
 	set -e; for d in ${DIRS}; do $(MAKE) -C $${d} $@; done
 

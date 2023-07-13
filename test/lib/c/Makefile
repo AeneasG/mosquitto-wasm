@@ -4,8 +4,8 @@ include ../../../config.mk
 
 CFLAGS=-I../../../include -Werror
 # use static lib for WASM
-ifeq ($(RUNTARGET), WASM)
-LIBS=-I../../../lib -L../../../lib -lmosquitto $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c -I/opt/wasm-micro-runtime/core/iwasm/libraries/lib-socket/inc  -D_WASI_EMULATED_SIGNAL -Wl,-lwasi-emulated-signal
+ifeq ($(TARGET_WASM), yes)
+LIBS=-I../../../lib -L../../../lib -lmosquitto $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc  -D_WASI_EMULATED_SIGNAL -Wl,-lwasi-emulated-signal
 else
 LIBS=../../../lib/libmosquitto.so.1
 endif
@@ -66,7 +66,7 @@ SRC += \
 	08-ssl-connect-cert-auth-custom-ssl-ctx-default.c
 ifeq ($(WITH_WOLFSSL), yes)
 LIBS += -lwolfssl -DWITH_WOLFSSL -L./../../../build_deps -I/usr/local/include
-ifeq ($(RUNTARGET), WASM)
+ifeq ($(TARGET_WASM), yes)
 LIBS += -DWOLFSSL_WASM
 endif
 else
@@ -78,7 +78,7 @@ ifeq ($(WITH_THREADING),yes)
 	SRC += \
 		02-subscribe-qos1-async1.c \
 		02-subscribe-qos1-async2.c
-	ifeq ($(RUNTARGET), WASM)
+	ifeq ($(TARGET_WASM), yes)
 		CFLAGS += --target=wasm32-wasi-threads
 	endif
 endif

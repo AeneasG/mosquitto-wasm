@@ -35,7 +35,9 @@ Contributors:
 #endif
 
 #include <errno.h>
+#ifndef __wasi__
 #include <signal.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 
@@ -45,7 +47,6 @@ Contributors:
 #define SO_ERROR     4
 #include <sys/socket.h>
 #include <wasi_socket_ext.h>
-#include <signal.h>
 #include <poll.h>
 #endif
 #include <time.h>
@@ -88,8 +89,8 @@ int mux_poll__init(struct mosquitto__listener_sock *listensock, int listensock_c
 #ifdef WIN32
 	pollfd_max = (size_t)_getmaxstdio();
 #elif defined(__wasi__)
-    // TODO how can we come up with a value?
-    pollfd_max = 16;
+	/* sysconf(_SC_OPEN_MAX) returns -1 in wasi, we use a constant instead */
+    pollfd_max = 1048576;
 #else
 	pollfd_max = (size_t)sysconf(_SC_OPEN_MAX);
 #endif

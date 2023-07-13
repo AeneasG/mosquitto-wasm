@@ -28,7 +28,7 @@ def start_broker(filename, cmd=None, port=0, use_conf=False, expect_fail=False, 
 
     if use_conf == True:
         if wasm:
-            cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.wasm', '-v', '-c', filename.replace('.py', '.conf')]
+            cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
         else:
             cmd = ['../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
 
@@ -37,13 +37,13 @@ def start_broker(filename, cmd=None, port=0, use_conf=False, expect_fail=False, 
     else:
         if cmd is None and port != 0:
             if wasm:
-                cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.wasm', '-v', '-p', str(port)]
+                cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto', '-v', '-p', str(port)]
             else:
                 cmd = ['../../src/mosquitto', '-v', '-p', str(port)]
         elif cmd is None and port == 0:
             port = 1888
             if wasm:
-                cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.wasm', '-v', '-c', filename.replace('.py', '.conf')]
+                cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
             else:
                 cmd = ['../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
 

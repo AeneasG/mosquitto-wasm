@@ -2,7 +2,7 @@ include ../config.mk
 
 .PHONY: all install uninstall clean reallyclean
 
-all : mosquitto$(ENDING)
+all : mosquitto
 
 EMBED_CERTS= ca_cert.h \
 		server_cert.h \
@@ -85,7 +85,7 @@ OBJS=	mosquitto.o \
 		will_mosq.o \
 		xtreport.o
 
-mosquitto$(ENDING) : ${OBJS}
+mosquitto : ${OBJS}
 	${CROSS_COMPILE}${CC} ${BROKER_LDFLAGS} $^ -o $@ $(BROKER_LDADD)
 
 mosquitto.o : mosquitto.c mosquitto_broker_internal.h
@@ -335,14 +335,14 @@ plugin_debug.so : plugin_debug.c ../include/mosquitto_plugin.../include/h mosqui
 ifeq ($(TARGET_INTEL_SGX), yes)
 ca_cert.h :
 	cd ../certs && xxd -i ca.crt ../src/ca_cert.h && cd ../src
-		
+
 server_cert.h :
 	cd ../certs && xxd -i server.crt ../src/server_cert.h && cd ../src
 
 server_key.h :
 	cd ../certs && xxd -i server.key ../src/server_key.h && cd ../src
 
-mosquitto_conf.h: 
+mosquitto_conf.h:
 	cd .. && xxd -i mosquitto.conf src/mosquitto_conf.h && cd src
 endif
 
@@ -359,7 +359,7 @@ uninstall :
 	-rm -f "${DESTDIR}${prefix}/include/mosquitto_plugin.h"
 
 clean :
-	-rm -f *.o mosquitto *.gcda *.gcno *.wasm mosquitto_conf.h server_cert.h server_key.h ca_cert.h
+	-rm -f *.o mosquitto *.gcda *.gcno mosquitto_conf.h server_cert.h server_key.h ca_cert.h
 
 reallyclean : clean
 	-rm -rf *.orig *.db

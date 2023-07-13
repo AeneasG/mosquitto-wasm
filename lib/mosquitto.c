@@ -19,7 +19,9 @@ Contributors:
 #include "config.h"
 
 #include <errno.h>
+#ifndef __wasi__
 #include <signal.h>
+#endif
 #include <string.h>
 #ifndef WIN32
 #include <sys/time.h>

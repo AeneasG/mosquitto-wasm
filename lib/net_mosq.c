@@ -410,6 +410,43 @@ int net__try_connect_step2(struct mosquitto *mosq, uint16_t port, mosq_sock_t *s
 
 #endif
 
+#ifdef __wasi__
+int net__wasm_getaddrinfo(const char *host, struct addrinfo *hints, struct addrinfo **ainfo) {
+	/**
+	 * This is a wrapper for the WASI implementation of getaddrinfo.
+	 * It is necessary as the WASI implementation does not support the AF_UNSPEC flag in the address hints
+	 * Consequentely, this method will call getaddrinfo twice, once for IPv4 and once for IPv6
+	 * The results will be merged into a single addrinfo struct
+	 * Returns 0 on success
+	 */
+	int rc;
+	struct addrinfo *rp;
+	if(host == NULL){
+        host = "localhost";
+    }
+
+    struct addrinfo *ainfoIpV6;
+    hints->ai_family = AF_INET;
+    rc = getaddrinfo(host, NULL, hints, ainfo);
+    hints->ai_family = AF_INET6;
+
+	if(rc == 0) {
+		int tryIpV6 = getaddrinfo(host, NULL, hints, &ainfoIpV6);
+
+		if(tryIpV6 == 0) {
+			rp = *ainfo;
+			// combine ainfoIpV4 and ainfoIpV6 into ainfo
+			while(rp->ai_next != NULL) {
+				rp = rp ->ai_next;
+			}
+			rp->ai_next = ainfoIpV6;
+		}
+	} else {
+		rc = getaddrinfo(host, NULL, hints, ainfo);
+	}
+	return rc;
+}
+#endif
 
 static int net__try_connect_tcp(const char *host, uint16_t port, mosq_sock_t *sock, const char *bind_address, bool blocking)
 {
@@ -426,33 +463,7 @@ static int net__try_connect_tcp(const char *host, uint16_t port, mosq_sock_t *so
     hints.ai_socktype = SOCK_STREAM;
 
 #ifdef __wasi__
-    if(host == NULL){
-        host = "localhost";
-    }
-
-    struct addrinfo *ainfoIpV4, *ainfoIpV6;
-    hints.ai_family = AF_INET;
-    int tryIpV4 = getaddrinfo(host, NULL, &hints, &ainfoIpV4);
-    hints.ai_family = AF_INET6;
-    int tryIpV6 = getaddrinfo(host, NULL, &hints, &ainfoIpV6);
-    if(tryIpV6 == 0 && tryIpV4 == 0) {
-        ainfo = ainfoIpV4;
-        rp = ainfo;
-        // combine ainfoIpV4 and ainfoIpV6 into ainfo
-        while(rp->ai_next != NULL) {
-            rp = rp ->ai_next;
-        }
-        rp->ai_next = ainfoIpV6;
-        s = tryIpV6;
-    } else if(tryIpV6 == 0) {
-        ainfo = ainfoIpV6;
-        s = tryIpV6;
-    } else if(tryIpV4 == 0) {
-        ainfo = ainfoIpV4;
-        s = tryIpV4;
-    } else {
-        s = INVALID_SOCKET;
-    }
+    s = net__wasm_getaddrinfo(host, &hints, &ainfo);
 #else
     hints.ai_family = AF_UNSPEC;
     s = getaddrinfo(host, NULL, &hints, &ainfo);
@@ -605,6 +616,7 @@ void net__print_ssl_error(struct mosquitto *mosq)
 
 int net__socket_connect_tls(struct mosquitto *mosq)
 {
+	int ret, err;
 	long res;
 
 	ERR_clear_error();
@@ -944,10 +956,11 @@ int net__socket_connect_step3(struct mosquitto *mosq, const char *host)
 		SSL_set_bio(mosq->ssl, bio, bio);
 
 #ifdef WITH_WOLFSSL
-		// we have WOLFSSL to tell here to verify the domain name
-		// otherwise the mosquitto__server_certificate_verify callback is not called
-		// even though registered
-		// on the other hand, wolfSSL will handle verification for us
+        /**
+         * we have WOLFSSL to tell here to verify the domain name
+         * otherwise the mosquitto__server_certificate_verify callback is not called
+         * even though registered
+         */
 		if(wolfSSL_check_domain_name(mosq->ssl, host) == SSL_FAILURE) {
 			net__socket_close(mosq);
 			return MOSQ_ERR_TLS;
@@ -1126,7 +1139,7 @@ int net__socket_nonblock(mosq_sock_t *sock)
 }
 
 
-#ifndef WITH_BROKER
+#if !defined(WITH_BROKER) && !defined(__wasi__)
 int net__socketpair(mosq_sock_t *pairR, mosq_sock_t *pairW)
 {
 #ifdef WIN32
@@ -1233,9 +1246,6 @@ int net__socketpair(mosq_sock_t *pairR, mosq_sock_t *pairW)
 		return MOSQ_ERR_SUCCESS;
 	}
 	return MOSQ_ERR_UNKNOWN;
-#elif __wasi__
-    log__printf(NULL, MOSQ_LOG_ERR, "ERROR: WASI does not support socket pairs.");
-    return MOSQ_ERR_ERRNO;
 #else
 	int sv[2];
 
