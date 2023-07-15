@@ -778,11 +778,13 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 	*lineno = 0;
 
 #ifdef INTEL_SGX
-	// we cannot separate a constant string
-	// therefore we copy the string first and do a null termination
+	/**
+	 * we cannot separate a constant string
+	 * therefore we copy the string first and do a null termination
+	 */
     char *tempToken = strndup(mosquitto_conf, strlen(mosquitto_conf));
     char **tokenToSplit = &tempToken;
-	// now split the string with \n as delimiter
+	/* now split the string with \n as delimiter */
     char *nextConfLine = strsep(tokenToSplit, "\n");
 	buf = &nextConfLine;
 #endif
@@ -794,13 +796,14 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 	while(fgets_extending(buf, buflen, fptr)){
 #endif
 		(*lineno)++;
-		if((*buf)[0] != '#' && (*buf)[0] != 10 && (*buf)[0] != 13){
+		/* If string is empty altoghether, a comment or just an empty line, we skip it */
+		if(strlen(*buf) > 0 && (*buf)[0] != '#' && (*buf)[0] != 10 && (*buf)[0] != 13){
 			slen = strlen(*buf);
 			if(slen == 0){
 				continue;
 			}
 #ifndef INTEL_SGX
-// as we split the string using \n as delimiter, we need to remove the \n at the end of the string
+			/* as we read the file till the next \n, we need to remove the \n at the end of the string */
 			while((*buf)[slen-1] == 10 || (*buf)[slen-1] == 13){
 				(*buf)[slen-1] = 0;
 				slen = strlen(*buf);
@@ -2240,7 +2243,7 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 			}
 		}
 #ifdef INTEL_SGX
-			// get the next line
+			/* get the next line */ 
 			nextConfLine = strsep(tokenToSplit, "\n");
 			if(nextConfLine == NULL) {
 				buf = NULL;
