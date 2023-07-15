@@ -769,8 +769,7 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 {
 	mosq_sock_t sock = INVALID_SOCKET;
 	struct addrinfo hints;
-	struct addrinfo *rp;
-	// struct addrinfo *ainfo, *rp;
+	struct addrinfo *ainfo, *rp;
 	char service[10];
 	int rc;
 	int ss_opt = 1;
@@ -787,7 +786,7 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 		log__printf(NULL, MOSQ_LOG_ERR, "IntelSGX must specify a socket domain.");
 		return INVALID_SOCKET;
 	}
-	struct addrinfo *ainfo = malloc(sizeof(struct addrinfo));
+	ainfo = malloc(sizeof(struct addrinfo));
 	memset(ainfo, 0, sizeof(struct addrinfo));
 	ainfo->ai_family = listener->socket_domain;
 	ainfo->ai_socktype = SOCK_STREAM;
