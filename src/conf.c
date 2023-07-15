@@ -376,15 +376,30 @@ static void print_usage(void)
 {
 	printf("mosquitto version %s\n\n", VERSION);
 	printf("mosquitto is an MQTT v5.0/v3.1.1/v3.1 broker.\n\n");
+#ifdef INTEL_SGX
+	printf("Usage: ./iwasm --addr-pool=<List of CIDR Addr Pool Notation> mosquitto.aot\n\n");
+#elif __wasi__
+	printf("Usage: ./iwasm --allow-resolve=<resolvable hosts> \\ \n");
+	printf("<--addr-pool=<List of CIDR Addr Pool Notation> --dir=<accessible directories> \\ \n");
+	printf("mosquitto [-c config_file] [-d] [-h] [-p port]\n\n");
+#else
 	printf("Usage: mosquitto [-c config_file] [-d] [-h] [-p port]\n\n");
+#endif
+#ifndef INTEL_SGX
 	printf(" -c : specify the broker config file.\n");
 	printf(" -d : put the broker into the background after starting.\n");
+#endif
 	printf(" -h : display this help.\n");
+#ifndef INTEL_SGX
 	printf(" -p : start the broker listening on the specified port.\n");
 	printf("      Not recommended in conjunction with the -c option.\n");
 	printf(" -v : verbose mode - enable all logging types. This overrides\n");
 	printf("      any logging options given in the config file.\n");
+#endif
 	printf("\nSee https://mosquitto.org/ for more information.\n\n");
+#ifdef __wasi__
+	printf("\nSee https://wamr.gitbook.io for more information on WAMR runtime and iwasm executable.\n\n");
+#endif
 }
 
 int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
