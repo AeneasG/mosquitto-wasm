@@ -49,7 +49,7 @@ make clean
 # build with make
 # you can omit WAMR_PATH if it equals to /opt/wasm-micro-runtime
 # you can omit WASI_SDK_PATH if it equals to /opt/wasi-sdk
-make RUNTARGET=WASM WAMR_PATH=/path/to/WAMR/root WASI_SDK_PATH=/path/to/WASI-SDK/root 
+make TARGET_WASM=yes WAMR_PATH=/path/to/WAMR/root WASI_SDK_PATH=/path/to/WASI-SDK/root 
 ```
 You can add any other option to build mosquitto as described in the standard mosquitto documentation. However, note, that not all options are supported in WASI nor have been tested.
 
@@ -65,6 +65,7 @@ Currently, known options that are not supported or not tested are:
 * `WITH_EPOLL` (no support in WASI)
 * `WITH_UNIX_SOCKETS` (no support in WASI)
 * `WITH_JEMALLOC` (must provide JEMALLOC WASI library)
+* `WITH_CJSON`
 
 Additionally, the following features are not supported / are not working
 * Signal handling
@@ -80,8 +81,7 @@ Known options, that are supported
 * `WITH_PERSISTENCE`
 * `WITH_MEMORY_TRACKING`
 * `WITH_SYS_TREE`
-* `WITH_SOCKS` (probably only impact on client)
-* `WITH_CJSON` (only relevant to the client)
+* `WITH_SOCKS` (client only)
 * `WITH_CONTROL`
 
 ### TLS

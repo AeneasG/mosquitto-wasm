@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
 from mosq_test_helper import *
+import sys
+
+wasm = False
+if (len(sys.argv) == 2) and sys.argv[1] == 'yes':
+    wasm = True
 
 if sys.version < '2.7':
     print("WARNING: SSL not supported on Python 2.6")
@@ -48,7 +53,11 @@ try:
     sock = mosq_test.do_client_connect(connect_packet, connack_packet, timeout=20, port=port2)
     mosq_test.do_send_receive(sock, subscribe_packet, suback_packet, "suback")
 
-    pub = subprocess.Popen(['./c/08-tls-psk-pub.test', str(port1)], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if wasm:
+        pub = subprocess.Popen(['./../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64', 'c/08-tls-psk-pub.test', str(port1)], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    else:
+        pub = subprocess.Popen(['./c/08-tls-psk-pub.test', str(port1)], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
     if pub.wait():
         raise ValueError
     (stdo, stde) = pub.communicate()

@@ -12,7 +12,7 @@ check : test
 ptest : test-compile
 	./test.py
 
-ifeq ($(RUNTARGET),WASM)
+ifeq ($(TARGET_WASM),yes)
 test : c
 
 test-compile : test-compile-c

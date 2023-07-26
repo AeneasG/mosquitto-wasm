@@ -23,7 +23,7 @@ Contributors:
 #include <sys/types.h>
 
 #if defined(WITH_MEMORY_TRACKING) && defined(WITH_BROKER)
-#  if defined(__APPLE__) || defined(__FreeBSD__) || defined(__GLIBC__)
+#  if defined(__APPLE__) || defined(__FreeBSD__) || defined(__GLIBC__) || defined(__wasi__)
 #    define REAL_WITH_MEMORY_TRACKING
 #  endif
 #endif

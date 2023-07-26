@@ -5,7 +5,7 @@ all :
 check : test
 ptest : test
 test :
-ifeq ($(RUNTARGET),WASM)
+ifeq ($(TARGET_WASM),yes)
 	./test_wasi.sh
 else
 	./test.sh
