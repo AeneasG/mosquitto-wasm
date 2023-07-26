@@ -33,7 +33,10 @@ Contributors:
 #include <features.h>
 #include <sys/socket.h>
 #include <wasi/api.h>
-// #include <wasi_socket_ext.h>
+
+#ifndef INTEL_SGX
+#include <wasi_socket_ext.h>
+#endif
 
 #elif !defined(WIN32)
 #  include <arpa/inet.h>
@@ -766,8 +769,7 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 {
 	mosq_sock_t sock = INVALID_SOCKET;
 	struct addrinfo hints;
-	struct addrinfo *rp;
-	// struct addrinfo *ainfo, *rp;
+	struct addrinfo *ainfo, *rp;
 	char service[10];
 	int rc;
 	int ss_opt = 1;
@@ -784,7 +786,7 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 		log__printf(NULL, MOSQ_LOG_ERR, "IntelSGX must specify a socket domain.");
 		return INVALID_SOCKET;
 	}
-	struct addrinfo *ainfo = malloc(sizeof(struct addrinfo));
+	ainfo = malloc(sizeof(struct addrinfo));
 	memset(ainfo, 0, sizeof(struct addrinfo));
 	ainfo->ai_family = listener->socket_domain;
 	ainfo->ai_socktype = SOCK_STREAM;
@@ -798,12 +800,15 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 		((struct sockaddr_in *)ainfo->ai_addr)->sin_port = htons(listener->port);
 		inet_pton(AF_INET, listener->host, &((struct sockaddr_in *)ainfo->ai_addr)->sin_addr);
 	} else {
-		ainfo->ai_addrlen = sizeof(struct sockaddr_in6);
+		/* Implementation for ipv6, but currently not supported in IntelSGX by WAMR */
+		/* ainfo->ai_addrlen = sizeof(struct sockaddr_in6);
 		ainfo->ai_addr = malloc(sizeof(struct sockaddr_in6));
 		memset(ainfo->ai_addr, 0, sizeof(struct sockaddr_in6));
 		((struct sockaddr_in6 *)ainfo->ai_addr)->sin6_family = AF_INET6;
 		((struct sockaddr_in6 *)ainfo->ai_addr)->sin6_port = htons(listener->port);
-		inet_pton(AF_INET6, listener->host, &((struct sockaddr_in6 *)ainfo->ai_addr)->sin6_addr);
+		inet_pton(AF_INET6, listener->host, &((struct sockaddr_in6 *)ainfo->ai_addr)->sin6_addr); */
+		log__printf(NULL, MOSQ_LOG_ERR, "IntelSGX does currently not support IPv6. Please specify only ipv4 listeners.");
+		return INVALID_SOCKET;
 	}
 	rc = 0;
 

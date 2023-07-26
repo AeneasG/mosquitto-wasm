@@ -376,15 +376,30 @@ static void print_usage(void)
 {
 	printf("mosquitto version %s\n\n", VERSION);
 	printf("mosquitto is an MQTT v5.0/v3.1.1/v3.1 broker.\n\n");
+#ifdef INTEL_SGX
+	printf("Usage: ./iwasm --addr-pool=<List of CIDR Addr Pool Notation> mosquitto.aot\n\n");
+#elif __wasi__
+	printf("Usage: ./iwasm --allow-resolve=<resolvable hosts> \\ \n");
+	printf("<--addr-pool=<List of CIDR Addr Pool Notation> --dir=<accessible directories> \\ \n");
+	printf("mosquitto [-c config_file] [-d] [-h] [-p port]\n\n");
+#else
 	printf("Usage: mosquitto [-c config_file] [-d] [-h] [-p port]\n\n");
+#endif
+#ifndef INTEL_SGX
 	printf(" -c : specify the broker config file.\n");
 	printf(" -d : put the broker into the background after starting.\n");
+#endif
 	printf(" -h : display this help.\n");
+#ifndef INTEL_SGX
 	printf(" -p : start the broker listening on the specified port.\n");
 	printf("      Not recommended in conjunction with the -c option.\n");
 	printf(" -v : verbose mode - enable all logging types. This overrides\n");
 	printf("      any logging options given in the config file.\n");
+#endif
 	printf("\nSee https://mosquitto.org/ for more information.\n\n");
+#ifdef __wasi__
+	printf("\nSee https://wamr.gitbook.io for more information on WAMR runtime and iwasm executable.\n\n");
+#endif
 }
 
 int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
@@ -778,11 +793,13 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 	*lineno = 0;
 
 #ifdef INTEL_SGX
-	// we cannot separate a constant string
-	// therefore we copy the string first and do a null termination
+	/**
+	 * we cannot separate a constant string
+	 * therefore we copy the string first and do a null termination
+	 */
     char *tempToken = strndup(mosquitto_conf, strlen(mosquitto_conf));
     char **tokenToSplit = &tempToken;
-	// now split the string with \n as delimiter
+	/* now split the string with \n as delimiter */
     char *nextConfLine = strsep(tokenToSplit, "\n");
 	buf = &nextConfLine;
 #endif
@@ -794,13 +811,14 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 	while(fgets_extending(buf, buflen, fptr)){
 #endif
 		(*lineno)++;
-		if((*buf)[0] != '#' && (*buf)[0] != 10 && (*buf)[0] != 13){
+		/* If string is empty altoghether, a comment or just an empty line, we skip it */
+		if(strlen(*buf) > 0 && (*buf)[0] != '#' && (*buf)[0] != 10 && (*buf)[0] != 13){
 			slen = strlen(*buf);
 			if(slen == 0){
 				continue;
 			}
 #ifndef INTEL_SGX
-// as we split the string using \n as delimiter, we need to remove the \n at the end of the string
+			/* as we read the file till the next \n, we need to remove the \n at the end of the string */
 			while((*buf)[slen-1] == 10 || (*buf)[slen-1] == 13){
 				(*buf)[slen-1] = 0;
 				slen = strlen(*buf);
@@ -2240,7 +2258,7 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 			}
 		}
 #ifdef INTEL_SGX
-			// get the next line
+			/* get the next line */ 
 			nextConfLine = strsep(tokenToSplit, "\n");
 			if(nextConfLine == NULL) {
 				buf = NULL;
