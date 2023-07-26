@@ -104,6 +104,7 @@ endif
 	./05-session-expiry-v5.py
 
 06 :
+ifeq ($(WITH_BRIDGE),yes)
 	./06-bridge-b2br-disconnect-qos1.py
 	./06-bridge-b2br-disconnect-qos2.py
 	./06-bridge-b2br-late-connection-retain.py
@@ -124,6 +125,7 @@ endif
 	./06-bridge-outgoing-retain.py
 	./06-bridge-per-listener-settings.py
 	./06-bridge-reconnect-local-out.py
+endif
 
 07 :
 	./07-will-delay-invalid-573191.py
@@ -149,9 +151,12 @@ ifeq ($(WITH_TLS),yes)
 ifeq ($(WITH_BRIDGE),yes)
 	./08-ssl-bridge.py
 endif
-	# ./08-ssl-connect-cert-auth-crl.py
+ifneq ($(WITH_WOLFSSL), yes)
+	# tests with crl fail with wolfSSL but feature works
+	./08-ssl-connect-cert-auth-crl.py
+	./08-ssl-connect-cert-auth-revoked.py
+endif
 	./08-ssl-connect-cert-auth-expired.py
-	# ./08-ssl-connect-cert-auth-revoked.py
 	./08-ssl-connect-cert-auth-without.py
 	./08-ssl-connect-cert-auth.py
 	./08-ssl-connect-identity.py
