@@ -49,7 +49,7 @@ make clean
 # build with make
 # you can omit WAMR_PATH if it equals to /opt/wasm-micro-runtime
 # you can omit WASI_SDK_PATH if it equals to /opt/wasi-sdk
-make RUNTARGET=WASM WAMR_PATH=/path/to/WAMR/root WASI_SDK_PATH=/path/to/WASI-SDK/root 
+make TARGET_WASM=yes WAMR_PATH=/path/to/WAMR/root WASI_SDK_PATH=/path/to/WASI-SDK/root 
 ```
 You can add any other option to build mosquitto as described in the standard mosquitto documentation. However, note, that not all options are supported in WASI nor have been tested.
 
