@@ -44,9 +44,7 @@ endif
 
 ${TESTS} : %.test: %.c
 ifeq ($(TARGET_WASM), yes)
-	# TODO use static library instead of shared library and export the needed stuff
-	# $(CROSS_COMPILE)$(CC) ${CFLAGS} $< -o $@ -I../../../lib -L../../../lib -lmosquitto
-	$(CC) ${CFLAGS} $< -o $@ /usr/local/lib/libmosquitto.so.1
+	$(CROSS_COMPILE)$(CC) ${CFLAGS} $< -o $@ -L../../../lib -lwolfssl -lmosquitto -DWITH_WOLFSSL -L./../../../build_deps -L../../../lib $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c  -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
 else
 	$(CC) ${CFLAGS} $< -o $@ ../../../lib/libmosquitto.so.1
 endif

@@ -35,7 +35,7 @@ WITH_WOLFSSL:=yes
 # Comment out to disable TLS/PSK support in the broker and client. Requires
 # WITH_TLS=yes.
 # This must be disabled if using openssl < 1.0.
-WITH_TLS_PSK:=no
+WITH_TLS_PSK:=yes
 
 # Comment out to disable client threading support.
 WITH_THREADING:=no
