@@ -18,7 +18,7 @@ Contributors:
 
 #include "config.h"
 
-#ifdef INTEL_SGX
+#ifdef SGX_EMBEDDED_CONFIG
 #include "ca_cert.h"
 #include "server_cert.h"
 #include "server_key.h"
@@ -498,7 +498,7 @@ int net__load_certificates(struct mosquitto__listener *listener)
 	}else{
 		SSL_CTX_set_verify(listener->ssl_ctx, SSL_VERIFY_NONE, client_certificate_verify);
 	}
-	#ifdef INTEL_SGX
+	#ifdef SGX_EMBEDDED_CONFIG
 	rc = wolfSSL_CTX_use_certificate_chain_buffer(listener->ssl_ctx, server_crt, server_crt_len);
 	#else
 	rc = SSL_CTX_use_certificate_chain_file(listener->ssl_ctx, listener->certfile);
@@ -509,7 +509,7 @@ int net__load_certificates(struct mosquitto__listener *listener)
 		return MOSQ_ERR_TLS;
 	}
 	if(listener->tls_engine == NULL){
-#ifdef INTEL_SGX
+#ifdef SGX_EMBEDDED_CONFIG
 		rc = wolfSSL_CTX_use_PrivateKey_buffer(listener->ssl_ctx, server_key, server_key_len, SSL_FILETYPE_PEM);
 #else
 		rc = SSL_CTX_use_PrivateKey_file(listener->ssl_ctx, listener->keyfile, SSL_FILETYPE_PEM);
@@ -603,7 +603,7 @@ int net__tls_load_verify(struct mosquitto__listener *listener)
 #ifdef WITH_TLS
 	int rc;
 
-#ifdef INTEL_SGX
+#ifdef SGX_EMBEDDED_CONFIG
 	rc = wolfSSL_CTX_load_verify_buffer(listener->ssl_ctx, ca_crt, ca_crt_len, SSL_FILETYPE_PEM);
 	if(rc == 0) {
 		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load embedded CA certificates.");
@@ -783,8 +783,12 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
     memset(&hints, 0, sizeof(struct addrinfo));
 #ifdef INTEL_SGX
 	if(!(listener->socket_domain)){
+#ifdef SGX_TEST_MODE
+		listener->socket_domain = AF_INET;
+#else
 		log__printf(NULL, MOSQ_LOG_ERR, "IntelSGX must specify a socket domain.");
 		return INVALID_SOCKET;
+#endif
 	}
 	ainfo = malloc(sizeof(struct addrinfo));
 	memset(ainfo, 0, sizeof(struct addrinfo));
@@ -1008,9 +1012,9 @@ int net__socket_listen(struct mosquitto__listener *listener)
 	/* We need to have at least one working socket. */
 	if(listener->sock_count > 0){
 #ifdef WITH_TLS
-#ifndef INTEL_SGX
+#ifndef SGX_EMBEDDED_CONFIG
 		if(listener->certfile && listener->keyfile){
-			#endif
+#endif
 			if(net__tls_server_ctx(listener)){
 				return 1;
 			}
@@ -1018,7 +1022,7 @@ int net__socket_listen(struct mosquitto__listener *listener)
 			if(net__tls_load_verify(listener)){
 				return 1;
 			}
-#ifndef INTEL_SGX
+#ifndef SGX_EMBEDDED_CONFIG
 		}
 #endif
 

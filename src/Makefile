@@ -100,7 +100,7 @@ bridge.o : bridge.c mosquitto_broker_internal.h
 bridge_topic.o : bridge_topic.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 
-ifeq ($(TARGET_INTEL_SGX),yes)
+ifeq ($(SGX_EMBEDDED_CONFIG),yes)
 conf.o : conf.c mosquitto_broker_internal.h mosquitto_conf.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 else
@@ -186,7 +186,7 @@ mux_epoll.o : mux_epoll.c mosquitto_broker_internal.h
 mux_poll.o : mux_poll.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 
-ifeq ($(TARGET_INTEL_SGX),yes)
+ifeq ($(SGX_EMBEDDED_CONFIG),yes)
 net.o : net.c mosquitto_broker_internal.h ${EMBED_CERTS}
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 else
@@ -332,7 +332,7 @@ plugin_defer.so : plugin_defer.c ../include/mosquitto_plugin.h ../include/mosqui
 plugin_debug.so : plugin_debug.c ../include/mosquitto_plugin.../include/h mosquitto_broker.h mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} -I. -I../lib -fPIC -shared $< -o $@
 
-ifeq ($(TARGET_INTEL_SGX), yes)
+ifeq ($(SGX_EMBEDDED_CONFIG), yes)
 ca_cert.h :
 	cd ../certs && xxd -i ca.crt ../src/ca_cert.h && cd ../src
 

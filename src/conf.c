@@ -29,7 +29,7 @@ Contributors:
 #  include <dirent.h>
 #  include <strings.h>
 #endif
-#ifdef INTEL_SGX
+#ifdef SGX_EMBEDDED_CONFIG
 #include <mosquitto_conf.h>
 #include <stdlib.h>
 #endif
@@ -385,12 +385,14 @@ static void print_usage(void)
 #else
 	printf("Usage: mosquitto [-c config_file] [-d] [-h] [-p port]\n\n");
 #endif
-#ifndef INTEL_SGX
+#ifndef SGX_EMBEDDED_CONFIG
 	printf(" -c : specify the broker config file.\n");
+#endif
+#ifndef __wasi__
 	printf(" -d : put the broker into the background after starting.\n");
 #endif
 	printf(" -h : display this help.\n");
-#ifndef INTEL_SGX
+#ifndef SGX_EMBEDDED_CONFIG
 	printf(" -p : start the broker listening on the specified port.\n");
 	printf("      Not recommended in conjunction with the -c option.\n");
 	printf(" -v : verbose mode - enable all logging types. This overrides\n");
@@ -408,7 +410,7 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 	int port_tmp;
 
 	for(i=1; i<argc; i++){
-#ifndef INTEL_SGX 
+#ifndef SGX_EMBEDDED_CONFIG 
 		if(!strcmp(argv[i], "-c") || !strcmp(argv[i], "--config-file")){
 			if(i<argc-1){
 				db.config_file = argv[i+1];
@@ -421,15 +423,18 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 				return MOSQ_ERR_INVAL;
 			}
 			i++;
-		}else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--daemon")){
+		}else 
+#ifndef __wasi__
+		if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--daemon")){
 			config->daemon = true;
 		}else 
+#endif
 #endif
 		if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")){
 			print_usage();
 			return MOSQ_ERR_INVAL;
 		}
-#ifndef INTEL_SGX
+#ifndef SGX_EMBEDDED_CONFIG
 		else if(!strcmp(argv[i], "-p") || !strcmp(argv[i], "--port")){
 			if(i<argc-1){
 				port_tmp = atoi(argv[i+1]);
@@ -460,7 +465,7 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 		}
 	}
 
-#ifdef INTEL_SGX
+#ifdef SGX_EMBEDDED_CONFIG
 	/* read config from buffer */
 	db.config_file = "buffer_conf";
 	config__read(config, false);
@@ -792,7 +797,7 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 #endif
 	*lineno = 0;
 
-#ifdef INTEL_SGX
+#ifdef SGX_EMBEDDED_CONFIG
 	/**
 	 * we cannot separate a constant string
 	 * therefore we copy the string first and do a null termination
@@ -804,7 +809,7 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 	buf = &nextConfLine;
 #endif
 
-#ifdef INTEL_SGX
+#ifdef SGX_EMBEDDED_CONFIG
 	/* Intel SGX: read as input from the mosquitto_conf buffer instead of the file */
 	while(buf != NULL) {
 #else
@@ -817,7 +822,7 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 			if(slen == 0){
 				continue;
 			}
-#ifndef INTEL_SGX
+#ifndef SGX_EMBEDDED_CONFIG
 			/* as we read the file till the next \n, we need to remove the \n at the end of the string */
 			while((*buf)[slen-1] == 10 || (*buf)[slen-1] == 13){
 				(*buf)[slen-1] = 0;
@@ -2257,7 +2262,7 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 				}
 			}
 		}
-#ifdef INTEL_SGX
+#ifdef SGX_EMBEDDED_CONFIG
 			/* get the next line */ 
 			nextConfLine = strsep(tokenToSplit, "\n");
 			if(nextConfLine == NULL) {
@@ -2267,7 +2272,7 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 			}
 #endif
 	}
-#ifdef INTEL_SGX
+#ifdef SGX_EMBEDDED_CONFIG
 	free(tempToken);
 #endif
 	return MOSQ_ERR_SUCCESS;
@@ -2293,7 +2298,7 @@ int config__read_file(struct mosquitto__config *config, bool reload, const char 
 #endif
 
 /* We don't read from a file in Intel SGX but from a buffer*/
-#ifndef INTEL_SGX
+#ifndef SGX_EMBEDDED_CONFIG
 	fptr = mosquitto__fopen(file, "rt", false);
 	if(!fptr){
 		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to open config file %s.", file);
@@ -2311,7 +2316,7 @@ int config__read_file(struct mosquitto__config *config, bool reload, const char 
 
 	rc = config__read_file_core(config, reload, cr, level, lineno, fptr, &buf, &buflen);
 	mosquitto__free(buf);
-#ifndef INTEL_SGX
+#ifndef SGX_EMBEDDED_CONFIG
 	fclose(fptr);
 #endif
 

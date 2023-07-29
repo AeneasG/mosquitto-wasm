@@ -13,7 +13,8 @@ import __main__
 import atexit
 vg_index = 1
 vg_logfiles = []
-wasm=True
+wasm=False
+wasm_sgx=True
 log=False
 
 class TestError(Exception):
@@ -27,7 +28,9 @@ def start_broker(filename, cmd=None, port=0, use_conf=False, expect_fail=False, 
     delay = 0.1
 
     if use_conf == True:
-        if wasm:
+        if wasm_sgx:
+            cmd = ['/opt/wasm-micro-runtime/product-mini/platforms/linux-sgx/enclave-sample/iwasm', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.aot', '-v', '-c', filename.replace('.py', '.conf')]
+        elif wasm:
             cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
         else:
             cmd = ['../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
@@ -36,13 +39,17 @@ def start_broker(filename, cmd=None, port=0, use_conf=False, expect_fail=False, 
             port = 1888
     else:
         if cmd is None and port != 0:
-            if wasm:
+            if wasm_sgx:
+                cmd = ['/opt/wasm-micro-runtime/product-mini/platforms/linux-sgx/enclave-sample/iwasm', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.aot', '-v', '-p', str(port)]
+            elif wasm:
                 cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto', '-v', '-p', str(port)]
             else:
                 cmd = ['../../src/mosquitto', '-v', '-p', str(port)]
         elif cmd is None and port == 0:
             port = 1888
-            if wasm:
+            if wasm_sgx:
+                cmd = ['/opt/wasm-micro-runtime/product-mini/platforms/linux-sgx/enclave-sample/iwasm', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.aot', '-v', '-c', filename.replace('.py', '.conf')]
+            elif wasm:
                 cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
             else:
                 cmd = ['../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
@@ -58,7 +65,7 @@ def start_broker(filename, cmd=None, port=0, use_conf=False, expect_fail=False, 
         delay = 1
 
     #print(port)
-    #print(cmd)
+    #print(" ".join(cmd))
     # format the current time with yyyy-MM-dd:HH:mm:ss
     currtime = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime()) + '_'
     if wasm:
@@ -70,6 +77,8 @@ def start_broker(filename, cmd=None, port=0, use_conf=False, expect_fail=False, 
     else:
         f = open('logs/'+str(currtime) + prefix + 'log.log', 'w');
         broker = subprocess.Popen(cmd, stderr=f, stdout=f)
+
+    time.sleep(2)
     for i in range(0, 20):
         time.sleep(delay)
         c = None

@@ -42,6 +42,18 @@ WITH_TLS_PSK:=yes
 # read more in the README-compiling.md
 TARGET_INTEL_SGX?=no
 
+# If you want to use the embedded config for Intel SGX, set this to yes
+# otherwise, the broker will parse the config from the file system
+# if you use protected file system, you will need to write the config for the broker to read it
+# if you don't use protected file system, this will be a security issue
+# This flag is ignored if TARGET_INTEL_SGX=no
+SGX_EMBEDDED_CONFIG?=no
+
+# Test mode for SGX automatically sets the domain to IPv4 and prevents a rewrite of the tests
+# Only intended for testing
+# This flag is ignored if TARGET_INTEL_SGX=no
+SGX_TEST_MODE?=yes
+
 # Comment out to disable client threading support.
 WITH_THREADING:=no
 
@@ -322,6 +334,13 @@ endif
 ifeq ($(TARGET_INTEL_SGX),yes)
 	BROKER_CFLAGS:=$(BROKER_CFLAGS) -DINTEL_SGX
 	LIB_CFLAGS:=$(LIB_CFLAGS) -DINTEL_SGX
+
+	ifeq ($(SGX_EMBEDDED_CONFIG),yes)
+		BROKER_CFLAGS:=$(BROKER_CFLAGS) -DSGX_EMBEDDED_CONFIG
+	endif
+	ifeq ($(SGX_TEST_MODE),yes) 
+		BROKER_CFLAGS:=$(BROKER_CFLAGS) -DSGX_TEST_MODE
+	endif
 endif
 
 ifeq ($(WITH_THREADING),yes)
