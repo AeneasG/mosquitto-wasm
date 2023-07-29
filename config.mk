@@ -156,6 +156,8 @@ DB_HTML_XSL=man/html.xsl
 UNAME:=$(shell uname -s)
 ARCH:=$(shell uname -p)
 
+CFLAGS=-O3
+
 ifeq ($(UNAME),SunOS)
 	ifeq ($(CC),cc)
 		CFLAGS?=-O
