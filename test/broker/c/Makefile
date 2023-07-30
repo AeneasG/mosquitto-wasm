@@ -47,7 +47,7 @@ ifeq ($(TARGET_WASM), yes)
 	$(CROSS_COMPILE)$(CC) ${CFLAGS} $< -o $@.wasm -L../../../lib -lwolfssl -lmosquitto -DWITH_WOLFSSL -L./../../../build_deps -L../../../lib $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c  -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
 	$(WAMR_PATH)/wamr-compiler/build/wamrc -o $@ $@.wasm 
 else
-	$(CC) ${CFLAGS} $< -o $@.wasm ../../../lib/libmosquitto.so.1
+	$(CC) ${CFLAGS} $< -o $@ ../../../lib/libmosquitto.so.1
 endif
 
 

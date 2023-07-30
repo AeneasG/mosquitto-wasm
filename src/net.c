@@ -498,11 +498,11 @@ int net__load_certificates(struct mosquitto__listener *listener)
 	}else{
 		SSL_CTX_set_verify(listener->ssl_ctx, SSL_VERIFY_NONE, client_certificate_verify);
 	}
-	#ifdef SGX_EMBEDDED_CONFIG
+#ifdef SGX_EMBEDDED_CONFIG
 	rc = wolfSSL_CTX_use_certificate_chain_buffer(listener->ssl_ctx, server_crt, server_crt_len);
-	#else
+#else
 	rc = SSL_CTX_use_certificate_chain_file(listener->ssl_ctx, listener->certfile);
-	#endif
+#endif
 	if(rc != 1){
 		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load server certificate \"%s\". Check certfile.", listener->certfile);
 		net__print_ssl_error(NULL);
