@@ -1067,7 +1067,11 @@ ssize_t net__read(struct mosquitto *mosq, void *buf, size_t count)
 
 #endif
 
-#ifndef WIN32
+#ifdef __wasi__
+	// read is not available in intelSGX (respectively always returns -1 indicating an error)
+	// so we use recv instead
+	return recv(mosq->sock, buf, count, 0);
+#elif !defined(WIN32)
 	return read(mosq->sock, buf, count);
 #else
 	return recv(mosq->sock, buf, count, 0);

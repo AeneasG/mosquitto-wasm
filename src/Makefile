@@ -4,6 +4,10 @@ include ../config.mk
 
 all : mosquitto
 
+EMBED_CERTS= ca_cert.h \
+		server_cert.h \
+		server_key.h
+
 OBJS=	mosquitto.o \
 		alias_mosq.o \
 		bridge.o \
@@ -96,8 +100,13 @@ bridge.o : bridge.c mosquitto_broker_internal.h
 bridge_topic.o : bridge_topic.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 
+ifeq ($(SGX_EMBEDDED_CONFIG),yes)
+conf.o : conf.c mosquitto_broker_internal.h mosquitto_conf.h
+	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
+else
 conf.o : conf.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
+endif
 
 conf_includedir.o : conf_includedir.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
@@ -177,8 +186,13 @@ mux_epoll.o : mux_epoll.c mosquitto_broker_internal.h
 mux_poll.o : mux_poll.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 
+ifeq ($(SGX_EMBEDDED_CONFIG),yes)
+net.o : net.c mosquitto_broker_internal.h ${EMBED_CERTS}
+	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
+else
 net.o : net.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
+endif
 
 net_mosq_ocsp.o : ../lib/net_mosq_ocsp.c ../lib/net_mosq.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
@@ -318,6 +332,20 @@ plugin_defer.so : plugin_defer.c ../include/mosquitto_plugin.h ../include/mosqui
 plugin_debug.so : plugin_debug.c ../include/mosquitto_plugin.../include/h mosquitto_broker.h mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} -I. -I../lib -fPIC -shared $< -o $@
 
+ifeq ($(SGX_EMBEDDED_CONFIG), yes)
+ca_cert.h :
+	cd ../certs && xxd -i ca.crt ../src/ca_cert.h && cd ../src
+
+server_cert.h :
+	cd ../certs && xxd -i server.crt ../src/server_cert.h && cd ../src
+
+server_key.h :
+	cd ../certs && xxd -i server.key ../src/server_key.h && cd ../src
+
+mosquitto_conf.h:
+	cd .. && xxd -i mosquitto.conf src/mosquitto_conf.h && cd src
+endif
+
 install : all
 	$(INSTALL) -d "${DESTDIR}$(prefix)/sbin"
 	$(INSTALL) ${STRIP_OPTS} mosquitto "${DESTDIR}${prefix}/sbin/mosquitto"
@@ -331,7 +359,7 @@ uninstall :
 	-rm -f "${DESTDIR}${prefix}/include/mosquitto_plugin.h"
 
 clean :
-	-rm -f *.o mosquitto *.gcda *.gcno
+	-rm -f *.o mosquitto *.gcda *.gcno mosquitto_conf.h server_cert.h server_key.h ca_cert.h *.aot
 
 reallyclean : clean
 	-rm -rf *.orig *.db

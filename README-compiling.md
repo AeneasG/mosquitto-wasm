@@ -129,6 +129,42 @@ Now you should be ready to build mosquitto with WolfSSL by running
 make clean && make RUNTARGET=WASM
 ````
 
+### Build for Linux SGX
+Mosquitto broker is able to run in an [Intel SGX](https://www.intel.com/content/www/us/en/developer/tools/software-guard-extensions/overview.html) enclave with a few tradeoffs. Mosquitto will be running completely in the trusted part backed by [WAMR](https://github.com/bytecodealliance/wasm-micro-runtime). WAMR is able to load a WASM module into the trusted part and execute it completely isolated from the rest of the operating system. If you like to use TLS, you have to use WolfSSL (as described before, no more changes necessary). If you don't like to use TLS, then some adaptations in the code will be necessary as the broker currently expects certificates at compile time as well as at runtime.
+
+The current tradeoffs are as follows:
+* Certificates must be embedded at compile-time and are loaded from buffers instead of the filesystem
+* Configuration must be embedded at compile-time and is loaded from a buffer
+* Persistency is supported, but only on the untrusted file system (use of IFPS is not implemented)
+
+Further, there are some features not working as expected compared to the native version, i.e.
+* Domain Name Resolution is not available. Indicate the listener IP address instead of the host
+* IPv6 addresses are not supported. You can just listen on IPv4 addresses
+* Persistence: only supported without IFPS. The persisted file is readable to anyone!
+* Differenct certificates per listener are not implemented, the borker uses the same embedded certificate for all listeners
+* ACL as well as CRL are not implemented
+* all features not working in WASM won't work here either
+* Non TLS traffic: Currently the broker expect and uses embedded certificates for all listeners effectively disabling non secured connections
+
+#### Compile
+To get started, create in the root of this project a file called `mosquitto.conf` and put your configuration of the broker in it. You can omit the references to `cafile`, `certfile` as well as `keyfile` as they are embedded during compile time and automatically loaded by the application regardless of any configuration. Also note the section above about non-working features.
+
+Next, create a folder in the root of this project called `certs` and place the following files in it with the correct name:
+* `server.key`: the broker's private key
+* `server.crt`: the server's certificate for the corresponding private key
+* `ca.crt`: the certificate chain of all trusted certificates
+
+If you have done these steps, you can run in the root of this project the following build command:
+```bash
+make TARGET_WASM=yes TARGET_INTEL_SGX=yes
+```
+
+Build the `wamrc` compiler as described [here](https://wamr.gitbook.io/document/basics/getting-started/build_wasm_app#compile-wasm-to-aot-module) and compile the wasm module outputted from the previous step using the following command
+```bash
+./wamrc -sgx -o src/mosquitto.aot src/mosquitto.wasm
+```
+#### Open Work
+The mosquitto library used by clients has not been ported to Intel SGX. Additionally, all non working features as well as the tradeoffs listed above are subject to further development.
 
 ## Run with WAMR
 Use your previously built WAMR runtime (in the following a file called `iwasm`) to run mosquitto as follows:
@@ -156,3 +192,15 @@ The client can be run as well using the following commands:
 ```bash
 ./iwasm --allow-resolve=* --addr-pool=0.0.0.0/32,0000:0000:0000:0000:0000:0000:0000:0000/64 client/mosquitto_pub -t 'test' -m "Hello World"
 ```
+
+## Run with SGX
+To run mosquitto in an Intel SGX enclave, you need to build first the WAMR runtime for Intel SGX. To do so, build [WAMR](https://github.com/bytecodealliance/wasm-micro-runtime) in `product-mini/platforms/linux-sgx` as well as `product-mini/platforms/linux-sgx/enclave-sample` as described in the corresponding `README`. Use the `iwasm` from the `enclave-sample` build step to run the `mosquitto.aot` from your last build step. The commands to start the broker are the same except that you don't need to pass any configuration file and don't need to pass a list of allowed domains to resolve:
+```bash
+./iwasm --addr-pool=<addr-pool to bind> src/mosquitto.aot
+```
+
+If you like to use persistency and configured the app to do so, specify also the folder your application is allowed to access:
+```bash
+./iwasm --addr-pool=<addr-pool to bind> --dir=<list of directories> src/mosquitto.aot
+```
+However, be aware, that this places this file is unprotected and can be read by anyone having access to the system. This will likely break your trust chain!

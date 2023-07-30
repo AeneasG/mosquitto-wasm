@@ -7,6 +7,7 @@
 *.pyc
 *.so
 *.vglog
+*.aot
 callgrind.out.*
 dhat.out.*
 massif.out.*
@@ -90,4 +91,8 @@ test/unit/out/
 
 www/cache/
 __pycache__
-iwasm
+iwasm*
+src/ca_cert.h
+src/server_cert.h
+src/server_key.h
+src/mosquitto_conf.h

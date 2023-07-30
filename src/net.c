@@ -18,6 +18,12 @@ Contributors:
 
 #include "config.h"
 
+#ifdef SGX_EMBEDDED_CONFIG
+#include "ca_cert.h"
+#include "server_cert.h"
+#include "server_key.h"
+#endif
+
 #ifdef __wasi__
 #include <arpa/inet.h>
 #include <ifaddrs.h>
@@ -27,7 +33,10 @@ Contributors:
 #include <features.h>
 #include <sys/socket.h>
 #include <wasi/api.h>
+
+#ifndef INTEL_SGX
 #include <wasi_socket_ext.h>
+#endif
 
 #elif !defined(WIN32)
 #  include <arpa/inet.h>
@@ -489,14 +498,22 @@ int net__load_certificates(struct mosquitto__listener *listener)
 	}else{
 		SSL_CTX_set_verify(listener->ssl_ctx, SSL_VERIFY_NONE, client_certificate_verify);
 	}
+#ifdef SGX_EMBEDDED_CONFIG
+	rc = wolfSSL_CTX_use_certificate_chain_buffer(listener->ssl_ctx, server_crt, server_crt_len);
+#else
 	rc = SSL_CTX_use_certificate_chain_file(listener->ssl_ctx, listener->certfile);
+#endif
 	if(rc != 1){
 		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load server certificate \"%s\". Check certfile.", listener->certfile);
 		net__print_ssl_error(NULL);
 		return MOSQ_ERR_TLS;
 	}
 	if(listener->tls_engine == NULL){
+#ifdef SGX_EMBEDDED_CONFIG
+		rc = wolfSSL_CTX_use_PrivateKey_buffer(listener->ssl_ctx, server_key, server_key_len, SSL_FILETYPE_PEM);
+#else
 		rc = SSL_CTX_use_PrivateKey_file(listener->ssl_ctx, listener->keyfile, SSL_FILETYPE_PEM);
+#endif
 		if(rc != 1){
 			log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load server key file \"%s\". Check keyfile.", listener->keyfile);
 			net__print_ssl_error(NULL);
@@ -586,6 +603,12 @@ int net__tls_load_verify(struct mosquitto__listener *listener)
 #ifdef WITH_TLS
 	int rc;
 
+#ifdef SGX_EMBEDDED_CONFIG
+	rc = wolfSSL_CTX_load_verify_buffer(listener->ssl_ctx, ca_crt, ca_crt_len, SSL_FILETYPE_PEM);
+	if(rc == 0) {
+		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load embedded CA certificates.");
+	}
+#else
 #  if OPENSSL_VERSION_NUMBER < 0x30000000L
 	if(listener->cafile || listener->capath){
 		rc = SSL_CTX_load_verify_locations(listener->ssl_ctx, listener->cafile, listener->capath);
@@ -616,6 +639,7 @@ int net__tls_load_verify(struct mosquitto__listener *listener)
 			return MOSQ_ERR_TLS;
 		}
 	}
+#  endif
 #  endif
 
 #  if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
@@ -694,7 +718,7 @@ static int net__bind_interface(struct mosquitto__listener *listener, struct addr
 }
 #endif
 
-#ifdef __wasi__
+#if defined(__wasi__) && !defined(INTEL_SGX)
 int net__wasm_getaddrinfo_broker(struct mosquitto__listener *listener, const char *service, struct addrinfo *hints, struct addrinfo **ainfo) {
 	/**
 	 * This is a wrapper for the WASI implementation of getaddrinfo.
@@ -727,7 +751,7 @@ int net__wasm_getaddrinfo_broker(struct mosquitto__listener *listener, const cha
 		if(rc != 0) {
 			freeaddrinfo(*ainfo);
 			*ainfo = NULL;
-			
+
         	rc = getaddrinfo(listener->host, service, hints, ainfo);
 		} else {
 			int tryIpV6 = getaddrinfo(listener->host, service, hints, &ainfoIpV6);
@@ -757,8 +781,42 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 
 	snprintf(service, 10, "%d", listener->port);
     memset(&hints, 0, sizeof(struct addrinfo));
+#ifdef INTEL_SGX
+	if(!(listener->socket_domain)){
+#ifdef SGX_TEST_MODE
+		listener->socket_domain = AF_INET;
+#else
+		log__printf(NULL, MOSQ_LOG_ERR, "IntelSGX must specify a socket domain.");
+		return INVALID_SOCKET;
+#endif
+	}
+	ainfo = malloc(sizeof(struct addrinfo));
+	memset(ainfo, 0, sizeof(struct addrinfo));
+	ainfo->ai_family = listener->socket_domain;
+	ainfo->ai_socktype = SOCK_STREAM;
+	ainfo->ai_protocol = IPPROTO_TCP;
 
-#ifdef __wasi__
+	if((listener->socket_domain) == AF_INET) {
+		ainfo->ai_addrlen = sizeof(struct sockaddr_in);
+		ainfo->ai_addr = malloc(sizeof(struct sockaddr_in));
+		memset(ainfo->ai_addr, 0, sizeof(struct sockaddr_in));
+		((struct sockaddr_in *)ainfo->ai_addr)->sin_family = AF_INET;
+		((struct sockaddr_in *)ainfo->ai_addr)->sin_port = htons(listener->port);
+		inet_pton(AF_INET, listener->host, &((struct sockaddr_in *)ainfo->ai_addr)->sin_addr);
+	} else {
+		/* Implementation for ipv6, but currently not supported in IntelSGX by WAMR */
+		/* ainfo->ai_addrlen = sizeof(struct sockaddr_in6);
+		ainfo->ai_addr = malloc(sizeof(struct sockaddr_in6));
+		memset(ainfo->ai_addr, 0, sizeof(struct sockaddr_in6));
+		((struct sockaddr_in6 *)ainfo->ai_addr)->sin6_family = AF_INET6;
+		((struct sockaddr_in6 *)ainfo->ai_addr)->sin6_port = htons(listener->port);
+		inet_pton(AF_INET6, listener->host, &((struct sockaddr_in6 *)ainfo->ai_addr)->sin6_addr); */
+		log__printf(NULL, MOSQ_LOG_ERR, "IntelSGX does currently not support IPv6. Please specify only ipv4 listeners.");
+		return INVALID_SOCKET;
+	}
+	rc = 0;
+
+#elif defined(__wasi__)
     rc = net__wasm_getaddrinfo_broker(listener, service, &hints, &ainfo);
 #else
     hints.ai_flags = AI_PASSIVE;
@@ -954,7 +1012,9 @@ int net__socket_listen(struct mosquitto__listener *listener)
 	/* We need to have at least one working socket. */
 	if(listener->sock_count > 0){
 #ifdef WITH_TLS
+#ifndef SGX_EMBEDDED_CONFIG
 		if(listener->certfile && listener->keyfile){
+#endif
 			if(net__tls_server_ctx(listener)){
 				return 1;
 			}
@@ -962,7 +1022,10 @@ int net__socket_listen(struct mosquitto__listener *listener)
 			if(net__tls_load_verify(listener)){
 				return 1;
 			}
+#ifndef SGX_EMBEDDED_CONFIG
 		}
+#endif
+
 #  ifdef FINAL_WITH_TLS_PSK
 		if(listener->psk_hint){
 			if(tls_ex_index_context == -1){
