@@ -31,7 +31,7 @@ def start_broker(filename, cmd=None, port=0, use_conf=False, expect_fail=False, 
         if wasm_sgx:
             cmd = ['/opt/wasm-micro-runtime/product-mini/platforms/linux-sgx/enclave-sample/iwasm', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.aot', '-v', '-c', filename.replace('.py', '.conf')]
         elif wasm:
-            cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
+            cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.aot', '-v', '-c', filename.replace('.py', '.conf')]
         else:
             cmd = ['../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
 
@@ -42,7 +42,7 @@ def start_broker(filename, cmd=None, port=0, use_conf=False, expect_fail=False, 
             if wasm_sgx:
                 cmd = ['/opt/wasm-micro-runtime/product-mini/platforms/linux-sgx/enclave-sample/iwasm', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.aot', '-v', '-p', str(port)]
             elif wasm:
-                cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto', '-v', '-p', str(port)]
+                cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.aot', '-v', '-p', str(port)]
             else:
                 cmd = ['../../src/mosquitto', '-v', '-p', str(port)]
         elif cmd is None and port == 0:
@@ -50,7 +50,7 @@ def start_broker(filename, cmd=None, port=0, use_conf=False, expect_fail=False, 
             if wasm_sgx:
                 cmd = ['/opt/wasm-micro-runtime/product-mini/platforms/linux-sgx/enclave-sample/iwasm', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.aot', '-v', '-c', filename.replace('.py', '.conf')]
             elif wasm:
-                cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
+                cmd = ['../../iwasm', '--allow-resolve=*', '--addr-pool=0.0.0.0/1,0000:0000:0000:0000:0000:0000:0000:0000/64', '--dir=.', '../../src/mosquitto.aot', '-v', '-c', filename.replace('.py', '.conf')]
             else:
                 cmd = ['../../src/mosquitto', '-v', '-c', filename.replace('.py', '.conf')]
 
