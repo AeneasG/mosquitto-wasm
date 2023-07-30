@@ -26,7 +26,7 @@
 # Disabling this will also mean that passwords must be stored in plain text. It
 # is strongly recommended that you only disable WITH_TLS if you are not using
 # password authentication at all.
-WITH_TLS:=yes
+WITH_TLS:=wolfssl
 
 # Comment out to disable TLS/PSK support in the broker and client. Requires
 # WITH_TLS=yes.
@@ -184,7 +184,7 @@ ifeq ($(TARGET_WASM), yes)
 	CC = clang
 	INCS += -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
 	LDFLAGS:=${LDFLAGS} -z stack-size=1638400
-	ifeq ($(WITH_TLS), yes)
+	ifeq ($(WITH_TLS), wolfssl)
 		INCS:=${INCS} -I/usr/local/include
 		CFLAGS:= ${CFLAGS} -DWOLFSSL_WASM -DWITH_WOLFSSL
 		LDFLAGS:= ${LDFLAGS} -L./../build_deps

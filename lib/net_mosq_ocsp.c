@@ -49,7 +49,9 @@ in this Software without prior written authorization of the copyright holder.
 #include <mosquitto_internal.h>
 #include <net_mosq.h>
 
+#ifndef USE_WOLFSSL
 #include <openssl/safestack.h>
+#endif
 #include <openssl/tls1.h>
 #include <openssl/ssl.h>
 #include <openssl/ocsp.h>
