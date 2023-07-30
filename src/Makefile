@@ -359,7 +359,7 @@ uninstall :
 	-rm -f "${DESTDIR}${prefix}/include/mosquitto_plugin.h"
 
 clean :
-	-rm -f *.o mosquitto *.gcda *.gcno mosquitto_conf.h server_cert.h server_key.h ca_cert.h
+	-rm -f *.o mosquitto *.gcda *.gcno mosquitto_conf.h server_cert.h server_key.h ca_cert.h *.aot
 
 reallyclean : clean
 	-rm -rf *.orig *.db
