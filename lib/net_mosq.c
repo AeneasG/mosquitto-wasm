@@ -941,7 +941,7 @@ int net__socket_connect_step3(struct mosquitto *mosq, const char *host)
 		}
 		SSL_set_bio(mosq->ssl, bio, bio);
 
-#ifdef USE_WOLFSSL
+#if defined(USE_WOLFSSL) && defined(__wasi__)
         /**
          * we have WOLFSSL to tell here to verify the domain name
          * otherwise the mosquitto__server_certificate_verify callback is not called
