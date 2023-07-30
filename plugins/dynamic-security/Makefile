@@ -19,7 +19,7 @@ OBJS=	\
 		sub_matches_sub.o
 
 ifeq ($(WITH_CJSON),yes)
-ifeq ($(WITH_TLS),yes)
+ifneq ($(WITH_TLS),no)
 ALL_DEPS:= binary
 else
 ALL_DEPS:=
@@ -76,7 +76,7 @@ test:
 
 install: all
 ifeq ($(WITH_CJSON),yes)
-ifeq ($(WITH_TLS),yes)
+ifneq ($(WITH_TLS),no)
 	$(INSTALL) -d "${DESTDIR}$(libdir)"
 	$(INSTALL) ${STRIP_OPTS} ${PLUGIN_NAME}.so "${DESTDIR}${libdir}/${PLUGIN_NAME}.so"
 endif

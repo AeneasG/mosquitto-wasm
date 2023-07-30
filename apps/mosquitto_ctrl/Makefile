@@ -28,7 +28,7 @@ OBJS=	mosquitto_ctrl.o \
 
 EXAMPLE_OBJS= example.o
 
-ifeq ($(WITH_TLS),yes)
+ifneq ($(WITH_TLS),no)
 ifeq ($(WITH_CJSON),yes)
 TARGET:=mosquitto_ctrl mosquitto_ctrl_example.so
 else
@@ -93,7 +93,7 @@ password_mosq.o : ../../src/password_mosq.c ../../src/password_mosq.h
 	$(MAKE) -C ../../lib libmosquitto.a
 
 install : all
-ifeq ($(WITH_TLS),yes)
+ifneq ($(WITH_TLS),no)
 ifeq ($(WITH_CJSON),yes)
 	$(INSTALL) -d "${DESTDIR}$(prefix)/bin"
 	$(INSTALL) ${STRIP_OPTS} mosquitto_ctrl "${DESTDIR}${prefix}/bin/mosquitto_ctrl"

@@ -60,12 +60,12 @@ SRC = \
 	11-prop-send-payload-format.c \
 	11-prop-send-content-type.c
 
-ifeq ($(WITH_TLS),yes)
+ifneq ($(WITH_TLS),yes)
 SRC += \
 	08-ssl-connect-cert-auth-custom-ssl-ctx.c \
 	08-ssl-connect-cert-auth-custom-ssl-ctx-default.c
-ifeq ($(WITH_WOLFSSL), yes)
-LIBS += -lwolfssl -DWITH_WOLFSSL -L./../../../build_deps -I/usr/local/include
+ifeq ($(WITH_TLS), wolfssl)
+LIBS += -lwolfssl -DUSE_WOLFSSL -L./../../../build_deps -I/usr/local/include
 ifeq ($(TARGET_WASM), yes)
 LIBS += -DWOLFSSL_WASM
 endif

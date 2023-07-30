@@ -9,7 +9,7 @@ OBJS=	mosquitto_passwd.o \
 		misc_mosq.o \
 		password_mosq.o
 
-ifeq ($(WITH_TLS),yes)
+ifneq ($(WITH_TLS),no)
 all: mosquitto_passwd
 else
 all:
@@ -37,7 +37,7 @@ password_mosq.o : ../../src/password_mosq.c ../../src/password_mosq.h
 	${CROSS_COMPILE}${CC} $(APP_CPPFLAGS) $(APP_CFLAGS) -c $< -o $@
 
 install : all
-ifeq ($(WITH_TLS),yes)
+ifneq ($(WITH_TLS),no)
 	$(INSTALL) -d "${DESTDIR}$(prefix)/bin"
 	$(INSTALL) ${STRIP_OPTS} mosquitto_passwd "${DESTDIR}${prefix}/bin/mosquitto_passwd"
 endif

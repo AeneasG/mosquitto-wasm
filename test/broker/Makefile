@@ -150,11 +150,11 @@ endif
 	./07-will-takeover.py
 
 08 :
-ifeq ($(WITH_TLS),yes)
+ifneq ($(WITH_TLS),no)
 ifeq ($(WITH_BRIDGE),yes)
 	./08-ssl-bridge.py
 endif
-ifneq ($(WITH_WOLFSSL), yes)
+ifneq ($(WITH_TLS), wolfssl)
 	# tests with crl fail with wolfSSL but feature works
 	./08-ssl-connect-cert-auth-crl.py
 	./08-ssl-connect-cert-auth-revoked.py
@@ -233,7 +233,7 @@ endif
 	./13-malformed-unsubscribe-v5.py
 
 14 :
-ifeq ($(WITH_TLS),yes)
+ifneq ($(WITH_TLS),no)
 ifeq ($(WITH_CJSON),yes)
 	./14-dynsec-acl.py
 	./14-dynsec-anon-group.py

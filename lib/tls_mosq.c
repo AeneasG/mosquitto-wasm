@@ -30,16 +30,9 @@ Contributors:
 #endif
 
 #include <string.h>
-#ifdef WITH_WOLFSSL
-#include <wolfssl/options.h>
-#include <wolfssl/openssl/conf.h>
-#include <wolfssl/openssl/x509v3.h>
-#include <wolfssl/openssl/ssl.h>
-#else
 #include <openssl/conf.h>
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
-#endif
 
 #ifdef WITH_BROKER
 #  include "mosquitto_broker_internal.h"
@@ -52,7 +45,7 @@ extern int tls_ex_index_mosq;
 
 int mosquitto__server_certificate_verify(int preverify_ok, X509_STORE_CTX *ctx)
 {
-	#ifdef WITH_WOLFSSL
+	#ifdef USE_WOLFSSL
 	/* WolfSSL has already verified the hostname */
 	return preverify_ok;
 	#else

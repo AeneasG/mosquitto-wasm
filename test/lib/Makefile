@@ -68,7 +68,7 @@ endif
 	./03-request-response-correlation.py $@/03-request-response-correlation.test
 	./03-request-response.py $@/03-request-response.test
 	./04-retain-qos0.py $@/04-retain-qos0.test
-ifeq ($(WITH_TLS),yes)
+ifneq ($(WITH_TLS),no)
 	#./08-ssl-fake-cacert.py $@/08-ssl-fake-cacert.test
 	./08-ssl-bad-cacert.py $@/08-ssl-bad-cacert.test
 	./08-ssl-connect-cert-auth-enc.py $@/08-ssl-connect-cert-auth-enc.test

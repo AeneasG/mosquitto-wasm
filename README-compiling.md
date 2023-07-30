@@ -87,7 +87,7 @@ Known options, that are supported
 ### TLS
 WolfSSL has been used to provide TLS for mosquitto in the WASM version. WolfSSL works in general also for the Linux version of mosquitto. To enable WolfSSL (instead of the default OpenSSL), specify
 
-``-DWITH_WOLFSSL=1``
+``-DWITH_TLS=wolfssl``
 
 #### Build WolfSSL
 You will probably have to build first WolfSSL. To do so, perform the following steps:

@@ -94,7 +94,7 @@ void net__print_ssl_error(struct mosquitto *mosq);
 int net__socket_apply_tls(struct mosquitto *mosq);
 int net__socket_connect_tls(struct mosquitto *mosq);
 int mosquitto__verify_ocsp_status_cb(SSL * ssl, void *arg);
-#ifndef WITH_WOLFSSL
+#ifndef USE_WOLFSSL
 UI_METHOD *net__get_ui_method(void);
 #define ENGINE_FINISH(e) if(e) ENGINE_finish(e)
 #endif

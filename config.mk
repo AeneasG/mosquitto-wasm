@@ -22,15 +22,11 @@
 # by reading the README-compiling file.
 #TARGET_WASM=yes
 
-# Comment out to disable SSL/TLS support in the broker and client.
+# Set to "no" to disable SSL/TLS support in the broker and client.
 # Disabling this will also mean that passwords must be stored in plain text. It
 # is strongly recommended that you only disable WITH_TLS if you are not using
 # password authentication at all.
 WITH_TLS:=yes
-
-# Comment in to use WolfSSL instead of OpenSSL for the broker and the client.
-# Note that if you compile to WASM, only WolfSSL is supported.
-WITH_WOLFSSL:=yes
 
 # Comment out to disable TLS/PSK support in the broker and client. Requires
 # WITH_TLS=yes.
@@ -301,29 +297,17 @@ ifeq ($(WITH_WRAP),yes)
 endif
 
 ifeq ($(WITH_TLS),yes)
+	ifeq ($(TARGET_WASM), yes)
+		ERROR_MSG:="OpenSSL is not available in WASM. Please use WITH_TLS=wolfssl instead."
+	endif
 	APP_CPPFLAGS:=$(APP_CPPFLAGS) -DWITH_TLS
 	BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_TLS
+	BROKER_LDADD:=$(BROKER_LDADD) -lssl -lcrypto
 	CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_TLS
 	LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_TLS
-	ifeq ($(WITH_WOLFSSL),yes)
-		BROKER_LDADD:=$(BROKER_LDADD) -lwolfssl -DWITH_WOLFSSL
-		CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_TLS -DWITH_WOLFSSL
-		LIB_LIBADD:=$(LIB_LIBADD) -lwolfssl -DWITH_WOLFSSL
-		PASSWD_LDADD:=$(PASSWD_LDADD) -lwolfssl -DWITH_WOLFSSL
-		STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lwolfssl -DWITH_WOLFSSL
-		APP_CPPFLAGS:=$(APP_CPPFLAGS) -DWITH_WOLFSSL
-		BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_WOLFSSL
-		CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_WOLFSSL
-		LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_WOLFSSL
-	else
-		ifeq ($(TARGET_WASM), yes)
-			ERROR_MSG:="OpenSSL is not available in WASM. Please use WolfSSL instead."
-		endif
-		BROKER_LDADD:=$(BROKER_LDADD) -lssl -lcrypto
-		LIB_LIBADD:=$(LIB_LIBADD) -lssl -lcrypto
-		PASSWD_LDADD:=$(PASSWD_LDADD) -lcrypto
-		STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lssl -lcrypto
-	endif
+	LIB_LIBADD:=$(LIB_LIBADD) -lssl -lcrypto
+	PASSWD_LDADD:=$(PASSWD_LDADD) -lcrypto
+	STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lssl -lcrypto
 
 	ifeq ($(WITH_TLS_PSK),yes)
 		BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_TLS_PSK
@@ -342,6 +326,25 @@ ifeq ($(TARGET_INTEL_SGX),yes)
 	ifeq ($(SGX_TEST_MODE),yes) 
 		BROKER_CFLAGS:=$(BROKER_CFLAGS) -DSGX_TEST_MODE
 	endif
+endif
+
+ifeq ($(WITH_TLS),wolfssl)
+   WOLFSSLDIR=/usr/local/include/wolfssl
+
+   APP_CPPFLAGS:=$(APP_CPPFLAGS) -DWITH_TLS -DOPENSSL_NO_ENGINE -I$(WOLFSSLDIR) -DEXTERNAL_OPTS_OPENVPN -DUSE_WOLFSSL
+   BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_TLS -DOPENSSL_NO_ENGINE -I$(WOLFSSLDIR) -DEXTERNAL_OPTS_OPENVPN -DUSE_WOLFSSL
+   BROKER_LDADD:=$(BROKER_LDADD) -lwolfssl
+   CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_TLS -DOPENSSL_NO_ENGINE -I$(WOLFSSLDIR) -DEXTERNAL_OPTS_OPENVPN -DUSE_WOLFSSL
+   LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_TLS -DOPENSSL_NO_ENGINE -I$(WOLFSSLDIR) -DEXTERNAL_OPTS_OPENVPN -DUSE_WOLFSSL
+   LIB_LIBADD:=$(LIB_LIBADD) -lwolfssl
+   PASSWD_LDADD:=$(PASSWD_LDADD) -lwolfssl
+   STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lwolfssl
+
+   ifeq ($(WITH_TLS_PSK),yes)
+       BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_TLS_PSK -DOPENSSL_NO_ENGINE -I$(WOLFSSLDIR) -DEXTERNAL_OPTS_OPENVPN -DUSE_WOLFSSL
+       LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_TLS_PSK -DOPENSSL_NO_ENGINE -I$(WOLFSSLDIR) -DEXTERNAL_OPTS_OPENVPN -DUSE_WOLFSSL
+       CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_TLS_PSK -DOPENSSL_NO_ENGINE -I$(WOLFSSLDIR) -DEXTERNAL_OPTS_OPENVPN -DUSE_WOLFSSL
+   endif
 endif
 
 ifeq ($(WITH_THREADING),yes)

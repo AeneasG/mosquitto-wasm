@@ -81,12 +81,7 @@ Contributors:
 
 #ifdef WITH_TLS
 #  include "tls_mosq.h"
-#ifdef WITH_WOLFSSL
-#  include <wolfssl/options.h>
-#  include <wolfssl/openssl/err.h>
-#else
 #  include <openssl/err.h>
-#endif
 static int tls_ex_index_context = -1;
 static int tls_ex_index_listener = -1;
 #endif
@@ -406,7 +401,7 @@ int net__tls_server_ctx(struct mosquitto__listener *listener)
 	SSL_CTX_set_ecdh_auto(listener->ssl_ctx, 1);
 #endif
 #endif
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(WITH_WOLFSSL)
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	SSL_CTX_set_dh_auto(listener->ssl_ctx, 1);
 #endif
 
@@ -540,7 +535,7 @@ int net__load_certificates(struct mosquitto__listener *listener)
 }
 
 
-#if defined(WITH_TLS) && !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
+#if defined(WITH_TLS) && !defined(OPENSSL_NO_ENGINE)
 static int net__load_engine(struct mosquitto__listener *listener)
 {
 	ENGINE *engine = NULL;
@@ -642,7 +637,7 @@ int net__tls_load_verify(struct mosquitto__listener *listener)
 #  endif
 #  endif
 
-#  if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
+#  if !defined(OPENSSL_NO_ENGINE)
 	if(net__load_engine(listener)){
 		return MOSQ_ERR_TLS;
 	}

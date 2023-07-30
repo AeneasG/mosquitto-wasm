@@ -62,18 +62,10 @@ Contributors:
 #endif
 
 #ifdef WITH_TLS
-#ifdef WITH_WOLFSSL
-#include <wolfssl/options.h>
-#include <wolfssl/openssl/conf.h>
-#include <wolfssl/openssl/engine.h>
-#include <wolfssl/openssl/err.h>
-#include <wolfssl/openssl/ui.h>
-#else
 #include <openssl/conf.h>
 #include <openssl/engine.h>
 #include <openssl/err.h>
 #include <openssl/ui.h>
-#endif
 #include <tls_mosq.h>
 #endif
 
@@ -94,14 +86,12 @@ Contributors:
 #include "util_mosq.h"
 
 #ifdef WITH_TLS
-int tls_ex_index_mosq = -1;
-#ifndef WITH_WOLFSSL
-UI_METHOD *_ui_method = NULL;
-#endif
-
 static bool is_tls_initialized = false;
+int tls_ex_index_mosq = -1;
 
-#ifndef WITH_WOLFSSL
+#ifndef USE_WOLFSSL
+UI_METHOD *_ui_method = NULL;
+
 /* Functions taken from OpenSSL s_server/s_client */
 static int ui_open(UI *ui)
 {
@@ -144,8 +134,7 @@ UI_METHOD *net__get_ui_method(void)
 {
 	return _ui_method;
 }
-#endif
-
+#endif /* !USE_WOLFSSL */
 #endif
 
 int net__init(void)
@@ -173,14 +162,15 @@ void net__cleanup(void)
 	ERR_remove_thread_state(NULL);
 	EVP_cleanup();
 
-#    if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
-    ENGINE_cleanup();
+#    if !defined(OPENSSL_NO_ENGINE)
+	ENGINE_cleanup();
 #    endif
 	is_tls_initialized = false;
 #  endif
+    is_tls_initialized = false;
 
 	CONF_modules_unload(1);
-#ifndef WITH_WOLFSSL
+#ifndef USE_WOLFSSL
     cleanup_ui_method();
 #endif
 #endif
@@ -211,7 +201,7 @@ void net__init_tls(void)
 #if !defined(OPENSSL_NO_ENGINE)
 	ENGINE_load_builtin_engines();
 #endif
-#ifndef WITH_WOLFSSL
+#ifndef USE_WOLFSSL
 	setup_ui_method();
 #endif
 	if(tls_ex_index_mosq == -1){
@@ -704,9 +694,7 @@ static int net__tls_load_ca(struct mosquitto *mosq)
 static int net__init_ssl_ctx(struct mosquitto *mosq)
 {
 	int ret;
-#ifndef WITH_WOLFSSL
 	ENGINE *engine = NULL;
-#endif
 	uint8_t tls_alpn_wire[256];
 	uint8_t tls_alpn_len;
 #if !defined(OPENSSL_NO_ENGINE)
@@ -768,9 +756,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
 		/* Allow use of DHE ciphers */
-#ifndef WITH_WOLFSSL
 		SSL_CTX_set_dh_auto(mosq->ssl_ctx, 1);
-#endif
 #endif
 		/* Disable compression */
 		SSL_CTX_set_options(mosq->ssl_ctx, SSL_OP_NO_COMPRESSION);
@@ -788,7 +774,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 			SSL_CTX_set_mode(mosq->ssl_ctx, SSL_MODE_RELEASE_BUFFERS);
 #endif
 
-#if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
+#if !defined(OPENSSL_NO_ENGINE)
 		if(mosq->tls_engine){
 			engine = ENGINE_by_id(mosq->tls_engine);
 			if(!engine){
@@ -809,7 +795,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 			ret = SSL_CTX_set_cipher_list(mosq->ssl_ctx, mosq->tls_ciphers);
 			if(ret == 0){
 				log__printf(mosq, MOSQ_LOG_ERR, "Error: Unable to set TLS ciphers. Check cipher list \"%s\".", mosq->tls_ciphers);
-#if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
+#if !defined(OPENSSL_NO_ENGINE)
 				ENGINE_FINISH(engine);
 #endif
 				net__print_ssl_error(mosq);
@@ -819,7 +805,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 		if(mosq->tls_cafile || mosq->tls_capath || mosq->tls_use_os_certs){
 			ret = net__tls_load_ca(mosq);
 			if(ret != MOSQ_ERR_SUCCESS){
-#  if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
+#  if !defined(OPENSSL_NO_ENGINE)
 				ENGINE_FINISH(engine);
 #  endif
 				net__print_ssl_error(mosq);
@@ -844,7 +830,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 #else
 					log__printf(mosq, MOSQ_LOG_ERR, "Error: Unable to load client certificate \"%s\".", mosq->tls_certfile);
 #endif
-#if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
+#if !defined(OPENSSL_NO_ENGINE)
 					ENGINE_FINISH(engine);
 #endif
 					net__print_ssl_error(mosq);
@@ -853,7 +839,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 			}
 			if(mosq->tls_keyfile){
 				if(mosq->tls_keyform == mosq_k_engine){
-#if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
+#if !defined(OPENSSL_NO_ENGINE)
 					UI_METHOD *ui_method = net__get_ui_method();
 					if(mosq->tls_engine_kpass_sha1){
 						if(!ENGINE_ctrl_cmd(engine, ENGINE_SECRET_MODE, ENGINE_SECRET_MODE_SHA, NULL, NULL, 0)){
@@ -955,7 +941,7 @@ int net__socket_connect_step3(struct mosquitto *mosq, const char *host)
 		}
 		SSL_set_bio(mosq->ssl, bio, bio);
 
-#ifdef WITH_WOLFSSL
+#ifdef USE_WOLFSSL
         /**
          * we have WOLFSSL to tell here to verify the domain name
          * otherwise the mosquitto__server_certificate_verify callback is not called
