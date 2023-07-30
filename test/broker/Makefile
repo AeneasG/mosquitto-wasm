@@ -23,7 +23,10 @@ msg_sequence_test:
 	./msg_sequence_test.py
 
 01 :
+ifneq ($(TARGET_INTEL_SGX), yes)
+# Intel SGX is too slow to make this test work
 	./01-connect-575314.py
+endif
 	./01-connect-allow-anonymous.py
 	./01-connect-disconnect-v5.py
 	./01-connect-max-connections.py

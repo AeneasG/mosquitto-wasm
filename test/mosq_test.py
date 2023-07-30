@@ -13,8 +13,8 @@ import __main__
 import atexit
 vg_index = 1
 vg_logfiles = []
-wasm=False
-wasm_sgx=True
+wasm=True
+wasm_sgx=False
 log=False
 
 class TestError(Exception):
@@ -78,7 +78,9 @@ def start_broker(filename, cmd=None, port=0, use_conf=False, expect_fail=False, 
         f = open('logs/'+str(currtime) + prefix + 'log.log', 'w');
         broker = subprocess.Popen(cmd, stderr=f, stdout=f)
 
-    time.sleep(2)
+    if wasm_sgx:
+        time.sleep(3)
+    
     for i in range(0, 20):
         time.sleep(delay)
         c = None

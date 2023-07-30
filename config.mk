@@ -20,7 +20,7 @@
 # Comment in if you like to compile to WASM. 
 # Please note about supported features if using WASM
 # by reading the README-compiling file.
-TARGET_WASM=yes
+#TARGET_WASM=yes
 
 # Comment out to disable SSL/TLS support in the broker and client.
 # Disabling this will also mean that passwords must be stored in plain text. It
