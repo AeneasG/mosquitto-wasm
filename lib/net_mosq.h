@@ -44,7 +44,8 @@ typedef SSIZE_T ssize_t;
 #    define EINPROGRESS WSAEINPROGRESS
 #  endif
 #elif __wasi__
-#  define COMPAT_CLOSE(a) shutdown(a, SHUT_RDWR)
+int net__shutdown_and_close_wasi(mosq_sock_t sock);
+#  define COMPAT_CLOSE(a) net__shutdown_and_close_wasi(a)
 #  define COMPAT_ECONNRESET ECONNRESET
 #  define COMPAT_EINTR EINTR
 #  define COMPAT_EWOULDBLOCK EWOULDBLOCK

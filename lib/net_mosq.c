@@ -1282,3 +1282,16 @@ void *mosquitto_ssl_get(struct mosquitto *mosq)
 #endif
 }
 #endif
+
+#ifdef __wasi__
+/**
+ * Shutdown closes the TCP connection in both directions whereas a direct close would 
+ * send a TCP RST to the peer. On the other hand, shutdown does not release the file descriptor
+ * i.e. the file descriptor would remain open (counting against the limit)
+ * Hence, closing a connection in wasi is done in two steps
+ */
+int net__shutdown_and_close_wasi(int a) {
+      shutdown(a, SHUT_RDWR);
+      return close(a);
+}
+#endif

@@ -44,8 +44,7 @@ endif
 
 ${TESTS} : %.test: %.c
 ifeq ($(TARGET_WASM), yes)
-	$(CROSS_COMPILE)$(CC) ${CFLAGS} $< -o $@.wasm -L../../../lib -lwolfssl -lmosquitto -DWITH_WOLFSSL -L./../../../build_deps -L../../../lib $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c  -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
-	$(WAMR_PATH)/wamr-compiler/build/wamrc -o $@ $@.wasm 
+	$(CROSS_COMPILE)$(CC) ${CFLAGS} $< -o $@ -L../../../lib -lwolfssl -lmosquitto -DWITH_WOLFSSL -L./../../../build_deps -L../../../lib $(WAMR_PATH)/core/iwasm/libraries/lib-socket/src/wasi/wasi_socket_ext.c  -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
 else
 	$(CC) ${CFLAGS} $< -o $@ ../../../lib/libmosquitto.so.1
 endif
@@ -55,4 +54,4 @@ reallyclean : clean
 	-rm -f *.orig
 
 clean :
-	rm -f *.so *.test *.wasm
+	rm -f *.so *.test
