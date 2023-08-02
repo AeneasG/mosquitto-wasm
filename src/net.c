@@ -604,9 +604,11 @@ int net__tls_load_verify(struct mosquitto__listener *listener)
 	int rc;
 
 #ifdef SGX_EMBEDDED_CONFIG
-	rc = wolfSSL_CTX_load_verify_buffer(listener->ssl_ctx, ca_crt, ca_crt_len, SSL_FILETYPE_PEM);
-	if(rc == 0) {
-		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load embedded CA certificates.");
+	if(listener->cafile || listener->capath){
+		rc = wolfSSL_CTX_load_verify_buffer(listener->ssl_ctx, ca_crt, ca_crt_len, SSL_FILETYPE_PEM);
+		if(rc == 0) {
+			log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load embedded CA certificates.");
+		}
 	}
 #else
 #  if OPENSSL_VERSION_NUMBER < 0x30000000L
@@ -1012,9 +1014,7 @@ int net__socket_listen(struct mosquitto__listener *listener)
 	/* We need to have at least one working socket. */
 	if(listener->sock_count > 0){
 #ifdef WITH_TLS
-#ifndef SGX_EMBEDDED_CONFIG
 		if(listener->certfile && listener->keyfile){
-#endif
 			if(net__tls_server_ctx(listener)){
 				return 1;
 			}
@@ -1022,9 +1022,7 @@ int net__socket_listen(struct mosquitto__listener *listener)
 			if(net__tls_load_verify(listener)){
 				return 1;
 			}
-#ifndef SGX_EMBEDDED_CONFIG
 		}
-#endif
 
 #  ifdef FINAL_WITH_TLS_PSK
 		if(listener->psk_hint){
