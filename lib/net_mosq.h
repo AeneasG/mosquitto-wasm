@@ -44,6 +44,7 @@ typedef SSIZE_T ssize_t;
 #    define EINPROGRESS WSAEINPROGRESS
 #  endif
 #elif __wasi__
+void net__wasm_enable_tcp_delayed_ack(int sock_fd);
 int net__shutdown_and_close_wasi(mosq_sock_t sock);
 #  define COMPAT_CLOSE(a) net__shutdown_and_close_wasi(a)
 #  define COMPAT_ECONNRESET ECONNRESET
