@@ -133,6 +133,13 @@ static void net__print_error(unsigned int log, const char *format_str)
 }
 
 
+#ifdef WITH_ATTESTATION
+int net__generate_attestation(const ATT_REQUEST *req, const byte *challenge, byte *output) {
+	// TODO generate attestation given the request, the challenge and put the output into *output
+	// return the size of your output
+}
+#endif
+
 struct mosquitto *net__socket_accept(struct mosquitto__listener_sock *listensock)
 {
 	mosq_sock_t new_sock = INVALID_SOCKET;
@@ -241,6 +248,10 @@ struct mosquitto *net__socket_accept(struct mosquitto__listener_sock *listensock
 			context__cleanup(new_context, true);
 			return NULL;
 		}
+#ifdef WITH_ATTESTATION
+		wolfSSL_KeepArrays(new_context->ssl);
+		wolfSSL_SetGenerateAttestation(new_context->ssl, net__generate_attestation);
+#endif
 		SSL_set_ex_data(new_context->ssl, tls_ex_index_context, new_context);
 		SSL_set_ex_data(new_context->ssl, tls_ex_index_listener, new_context->listener);
 		new_context->want_write = true;

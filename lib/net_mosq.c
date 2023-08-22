@@ -955,6 +955,30 @@ int net__socket_connect_step3(struct mosquitto *mosq, const char *host)
 			return MOSQ_ERR_TLS;
 		}
 
+#if defined(WITH_ATTESTATION) && !defined(WITH_BROKER)
+
+		if(mosq->get_attestation_challenge && mosq->verify_attestation) {
+			wolfSSL_KeepArrays(mosq->ssl);
+			
+			ATT_REQUEST *att_request;
+			mosq->get_attestation_challenge(att_request);
+			if (wolfSSL_AttestationRequest(mosq->ssl, att_request) != SSL_SUCCESS) {
+				log__printf(mosq, MOSQ_LOG_ERR, "wolfSSL_AttestationRequest() failure: could not set the attestation request");
+				return MOSQ_ERR_TLS;
+			}
+
+			// set the callback for the verification of the attestation
+			if (wolfSSL_SetVerifyAttestation(mosq->ssl, mosq->verify_attestation) != SSL_SUCCESS) {
+				log__printf(mosq, MOSQ_LOG_ERR, "wolfSSL_SetVerifyAttestation() failure: could not set the attestation verification callback");
+				return MOSQ_ERR_TLS;
+			}
+		} else if(mosq->get_attestation_challenge || mosq->verify_attestation) {
+			log__printf(mosq, MOSQ_LOG_ERR, "wolfSSL_AttestationRequest() failure: both get_attestation_challenge and verify_attestation must be set in order to use attestation");
+			return MOSQ_ERR_TLS;
+		}
+		
+#endif
+
 		SSL_set_ex_data(mosq->ssl, tls_ex_index_mosq, mosq);
 		bio = BIO_new_socket(mosq->sock, BIO_NOCLOSE);
 		if(!bio){

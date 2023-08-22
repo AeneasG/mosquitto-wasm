@@ -61,6 +61,10 @@ extern "C" {
 #	endif
 #endif
 
+#ifdef WITH_ATTESTATION
+#include <wolfssl/ssl.h>
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -2247,6 +2251,11 @@ libmosq_EXPORT void mosquitto_unsubscribe_v5_callback_set(struct mosquitto *mosq
  *	str -   the message string.
  */
 libmosq_EXPORT void mosquitto_log_callback_set(struct mosquitto *mosq, void (*on_log)(struct mosquitto *, void *, int, const char *));
+
+#ifdef WITH_ATTESTATION
+libmosq_EXPORT void mosquitto_get_attestation_set(struct mosquitto *mosq, void (*get_attestation)(struct ATT_REQUEST *));
+libmosq_EXPORT void mosquitto_verify_attestation_set(struct mosquitto *mosq, int (*verify_attestation)(const ATT_REQUEST *, const byte *));
+#endif
 
 
 /* =============================================================================

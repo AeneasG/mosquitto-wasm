@@ -32,6 +32,8 @@ WITH_TLS:=yes
 # Note that if you compile to WASM, only WolfSSL is supported.
 WITH_WOLFSSL:=yes
 
+WITH_ATTESTATION:=yes
+
 # Comment out to disable TLS/PSK support in the broker and client. Requires
 # WITH_TLS=yes.
 # This must be disabled if using openssl < 1.0.
@@ -315,6 +317,10 @@ ifeq ($(WITH_TLS),yes)
 		BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_WOLFSSL
 		CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_WOLFSSL
 		LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_WOLFSSL
+		ifeq ($(WITH_ATTESTATION),yes)
+			BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_ATTESTATION
+			LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_ATTESTATION
+		endif
 	else
 		ifeq ($(TARGET_WASM), yes)
 			ERROR_MSG:="OpenSSL is not available in WASM. Please use WolfSSL instead."

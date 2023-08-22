@@ -336,6 +336,10 @@ struct mosquitto {
 	void (*on_unsubscribe)(struct mosquitto *, void *userdata, int mid);
 	void (*on_unsubscribe_v5)(struct mosquitto *, void *userdata, int mid, const mosquitto_property *props);
 	void (*on_log)(struct mosquitto *, void *userdata, int level, const char *str);
+#ifdef WITH_ATTESTATION
+	void (*get_attestation_challenge)(ATT_REQUEST *);
+	int  (*verify_attestation)(const ATT_REQUEST *, const byte *);
+#endif
 	/*void (*on_error)();*/
 	char *host;
 	uint16_t port;
