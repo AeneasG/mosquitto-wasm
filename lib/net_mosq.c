@@ -551,6 +551,9 @@ static int net__try_connect_tcp(const char *host, uint16_t port, mosq_sock_t *so
 	if(bind_address){
 		freeaddrinfo(ainfo_bind);
 	}
+#ifdef __wasi__
+	net__wasm_enable_tcp_delayed_ack(*sock);
+#endif
 	if(!rp){
 		return MOSQ_ERR_ERRNO;
 	}
@@ -1067,9 +1070,6 @@ ssize_t net__read(struct mosquitto *mosq, void *buf, size_t count)
 #ifdef WITH_TLS
 	if(mosq->ssl){
 		ret = SSL_read(mosq->ssl, buf, (int)count);
-#ifdef __wasi__
-        net__wasm_enable_tcp_delayed_ack(mosq->sock);
-#endif
 		if(ret <= 0){
 			ret = net__handle_ssl(mosq, ret);
 		}
@@ -1082,9 +1082,7 @@ ssize_t net__read(struct mosquitto *mosq, void *buf, size_t count)
 #ifdef __wasi__
 	// read is not available in intelSGX (respectively always returns -1 indicating an error)
 	// so we use recv instead
-	ssize_t bytes = recv(mosq->sock, buf, count, 0);
-	net__wasm_enable_tcp_delayed_ack(mosq->sock);
-	return bytes;
+	return recv(mosq->sock, buf, count, 0);
 #elif !defined(WIN32)
 	return read(mosq->sock, buf, count);
 #else
@@ -1108,9 +1106,6 @@ ssize_t net__write(struct mosquitto *mosq, const void *buf, size_t count)
 	if(mosq->ssl){
 		mosq->want_write = false;
 		ret = SSL_write(mosq->ssl, buf, (int)count);
-#ifdef __wasi__
-		net__wasm_enable_tcp_delayed_ack(mosq->sock);
-#endif
 		if(ret < 0){
 			ret = net__handle_ssl(mosq, ret);
 		}
@@ -1118,13 +1113,7 @@ ssize_t net__write(struct mosquitto *mosq, const void *buf, size_t count)
 	}else{
 		/* Call normal write/send */
 #endif
-#ifdef __wasi__
-	ssize_t bytes = send(mosq->sock, buf, count, MSG_NOSIGNAL);
-	net__wasm_enable_tcp_delayed_ack(mosq->sock);
-	return bytes;
-#else
 	return send(mosq->sock, buf, count, MSG_NOSIGNAL);
-#endif
 
 #ifdef WITH_TLS
 	}

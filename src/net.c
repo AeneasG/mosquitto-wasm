@@ -147,9 +147,6 @@ struct mosquitto *net__socket_accept(struct mosquitto__listener_sock *listensock
 	struct request_info wrap_req;
 	char address[1024];
 #endif
-#ifdef __wasi__
-    net__wasm_enable_tcp_delayed_ack(listensock->sock);
-#endif
 	new_sock = accept(listensock->sock, NULL, 0);
 #ifdef __wasi__
     net__wasm_enable_tcp_delayed_ack(new_sock);
