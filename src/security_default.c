@@ -29,6 +29,10 @@ Contributors:
 #include "misc_mosq.h"
 #include "util_mosq.h"
 
+#ifdef SGX_EMBEDDED_CONFIG
+	#include "psk_file.h"
+#endif
+
 static int aclfile__parse(struct mosquitto__security_options *security_opts);
 static int unpwd__file_parse(struct mosquitto__unpwd **unpwd, const char *password_file);
 static int acl__cleanup(bool reload);
@@ -755,15 +759,32 @@ static int pwfile__parse(const char *file, struct mosquitto__unpwd **root)
 		return MOSQ_ERR_NOMEM;
 	}
 
+#ifdef SGX_EMBEDDED_CONFIG
+	/**
+	 * we cannot separate a constant string
+	 * therefore we copy the string first and do a null termination
+	 */
+    char *tempToken = strndup(psk_file_txt, psk_file_txt_len);
+    char **tokenToSplit = &tempToken;
+	/* now split the string with \n as delimiter */
+    char *nextConfLine = strsep(tokenToSplit, "\n");
+	buf = nextConfLine;
+#else
 	pwfile = mosquitto__fopen(file, "rt", false);
 	if(!pwfile){
 		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to open pwfile \"%s\".", file);
 		mosquitto__free(buf);
 		return MOSQ_ERR_UNKNOWN;
 	}
+#endif
 
+#ifndef SGX_EMBEDDED_CONFIG
 	while(!feof(pwfile)){
 		if(fgets_extending(&buf, &buflen, pwfile)){
+#else
+	while(buf != NULL) {
+		if(buf[0] != '\0') {
+#endif
 			if(buf[0] == '#') continue;
 			if(!strchr(buf, ':')) continue;
 
@@ -817,8 +838,21 @@ static int pwfile__parse(const char *file, struct mosquitto__unpwd **root)
 				}
 			}
 		}
+#ifdef SGX_EMBEDDED_CONFIG
+		/* get the next line */ 
+		nextConfLine = strsep(tokenToSplit, "\n");
+		if(nextConfLine == NULL) {
+			buf = NULL;
+		} else {
+			buf = nextConfLine;
+		}
+#endif
 	}
+#ifdef SGX_EMBEDDED_CONFIG
+	free(tempToken);
+#else
 	fclose(pwfile);
+#endif
 	mosquitto__free(buf);
 
 	return MOSQ_ERR_SUCCESS;
@@ -943,6 +977,7 @@ static int unpwd__file_parse(struct mosquitto__unpwd **unpwd, const char *passwo
 	return rc;
 }
 
+// TODO here
 static int psk__file_parse(struct mosquitto__unpwd **psk_id, const char *psk_file)
 {
 	int rc;
