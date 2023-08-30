@@ -245,7 +245,11 @@ retain.o : retain.c mosquitto_broker_internal.h
 security.o : security.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 
+ifeq ($(SGX_EMBEDDED_CONFIG), yes)
+security_default.o : security_default.c mosquitto_broker_internal.h psk_file.h
+else
 security_default.o : security_default.c mosquitto_broker_internal.h
+endif
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 
 send_auth.o : send_auth.c mosquitto_broker_internal.h
@@ -342,6 +346,9 @@ server_cert.h :
 server_key.h :
 	cd ../certs && xxd -i server.key ../src/server_key.h && cd ../src
 
+psk_file.h :
+	cd ../certs && xxd -i psk_file.txt ../src/psk_file.h && cd ../src
+
 mosquitto_conf.h:
 	cd .. && xxd -i mosquitto.conf src/mosquitto_conf.h && cd src
 endif
@@ -359,7 +366,7 @@ uninstall :
 	-rm -f "${DESTDIR}${prefix}/include/mosquitto_plugin.h"
 
 clean :
-	-rm -f *.o mosquitto *.gcda *.gcno mosquitto_conf.h server_cert.h server_key.h ca_cert.h *.aot
+	-rm -f *.o mosquitto *.gcda *.gcno mosquitto_conf.h server_cert.h server_key.h ca_cert.h psk_file.h *.aot
 
 reallyclean : clean
 	-rm -rf *.orig *.db

@@ -126,7 +126,7 @@ sudo cp libwolfssl.a /usr/local/lib/libwolfssl.a
 Now you should be ready to build mosquitto with WolfSSL by running
 ````bash
 # add your config to config.mk, then
-make clean && make RUNTARGET=WASM
+make clean && make TARGET_WASM=yes
 ````
 
 ### Build for Linux SGX

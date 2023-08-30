@@ -189,7 +189,7 @@ ifeq ($(TARGET_WASM), yes)
 	CROSS_COMPILE = $(WASI_SDK_PATH)/bin/
 	CC = clang
 	INCS += -I$(WAMR_PATH)/core/iwasm/libraries/lib-socket/inc
-	LDFLAGS:=${LDFLAGS} -z stack-size=1638400
+	LDFLAGS:=${LDFLAGS}
 	ifeq ($(WITH_TLS), yes)
 		INCS:=${INCS} -I/usr/local/include
 		CFLAGS:= ${CFLAGS} -DWOLFSSL_WASM -DWITH_WOLFSSL

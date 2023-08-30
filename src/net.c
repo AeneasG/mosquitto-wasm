@@ -154,9 +154,6 @@ struct mosquitto *net__socket_accept(struct mosquitto__listener_sock *listensock
 	struct request_info wrap_req;
 	char address[1024];
 #endif
-#ifdef __wasi__
-    net__wasm_enable_tcp_delayed_ack(listensock->sock);
-#endif
 	new_sock = accept(listensock->sock, NULL, 0);
 #ifdef __wasi__
     net__wasm_enable_tcp_delayed_ack(new_sock);
@@ -371,7 +368,7 @@ int net__tls_server_ctx(struct mosquitto__listener *listener)
 		return MOSQ_ERR_TLS;
 	}
 
-#ifdef SSL_OP_NO_TLSv1_3
+#if defined(SSL_OP_NO_TLSv1_3) && !defined(WITH_WOLFSSL)
 	if(db.config->per_listener_settings){
 		if(listener->security_options.psk_file){
 			SSL_CTX_set_options(listener->ssl_ctx, SSL_OP_NO_TLSv1_3);
