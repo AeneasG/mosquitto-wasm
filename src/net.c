@@ -93,6 +93,10 @@ static int tls_ex_index_listener = -1;
 
 #include "sys_tree.h"
 
+#ifdef WITH_BROKER_ATTESTATION
+#include "lib_rats_wrapper.h"
+#endif
+
 /* For EMFILE handling */
 static mosq_sock_t spare_sock = INVALID_SOCKET;
 
@@ -133,10 +137,25 @@ static void net__print_error(unsigned int log, const char *format_str)
 }
 
 
-#ifdef WITH_ATTESTATION
+#ifdef WITH_BROKER_ATTESTATION
 int net__generate_attestation(const ATT_REQUEST *req, const byte *challenge, byte *output) {
-	// TODO generate attestation given the request, the challenge and put the output into *output
-	// return the size of your output
+	char *evidence_json = NULL;
+	int ret_code = -1;
+
+    rats_sgx_evidence_t *evidence = (rats_sgx_evidence_t *)malloc(sizeof(rats_sgx_evidence_t));
+    if (!evidence) {
+        log__printf(NULL, MOSQ_LOG_ERR, "No memory to allocate.");
+        return -1;
+    }
+
+    int rats_err = librats_collect(&evidence_json, challenge);
+    if (rats_err != 0) {
+		log__printf(NULL, MOSQ_LOG_ERR, "Collect evidence failed, error code: %#x", rats_err);
+        return -1;
+    }
+	output = evidence_json;
+
+	return strlen(evidence_json);
 }
 #endif
 
@@ -245,7 +264,7 @@ struct mosquitto *net__socket_accept(struct mosquitto__listener_sock *listensock
 			context__cleanup(new_context, true);
 			return NULL;
 		}
-#ifdef WITH_ATTESTATION
+#ifdef WITH_BROKER_ATTESTATION
 		wolfSSL_KeepArrays(new_context->ssl);
 		wolfSSL_SetGenerateAttestation(new_context->ssl, net__generate_attestation);
 #endif

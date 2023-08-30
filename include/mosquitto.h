@@ -16,6 +16,11 @@ Contributors:
    Roger Light - initial implementation and documentation.
 */
 
+#ifdef WITH_ATTESTATION
+#include <wolfssl/options.h>
+#include <wolfssl/ssl.h>
+#endif
+
 #ifndef MOSQUITTO_H
 #define MOSQUITTO_H
 
@@ -2254,9 +2259,8 @@ libmosq_EXPORT void mosquitto_log_callback_set(struct mosquitto *mosq, void (*on
 
 #ifdef WITH_ATTESTATION
 libmosq_EXPORT void mosquitto_get_attestation_set(struct mosquitto *mosq, void (*get_attestation)(struct ATT_REQUEST *));
-libmosq_EXPORT void mosquitto_verify_attestation_set(struct mosquitto *mosq, int (*verify_attestation)(const ATT_REQUEST *, const byte *));
+libmosq_EXPORT void mosquitto_verify_attestation_set(struct mosquitto *mosq, int (*verify_attestation)(const ATT_REQUEST *, const unsigned char *));
 #endif
-
 
 /* =============================================================================
  *

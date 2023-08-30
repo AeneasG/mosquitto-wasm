@@ -32,7 +32,14 @@ WITH_TLS:=yes
 # Note that if you compile to WASM, only WolfSSL is supported.
 WITH_WOLFSSL:=yes
 
-WITH_ATTESTATION:=yes
+# This requires a version of wolfssl that supports remote attestation
+# It creates two new callbacks on the client library to support remote attestation
+WITH_ATTESTATION:=no
+
+# This feature requires INTEL SGX and enables on the broker side remote attestation
+# it requires the same version of wolfssl as WITH_ATTESTATION does
+# and depends on LIBRATS to generate the attestation
+WITH_BROKER_ATTESTATION:=no
 
 # Comment out to disable TLS/PSK support in the broker and client. Requires
 # WITH_TLS=yes.
@@ -318,8 +325,14 @@ ifeq ($(WITH_TLS),yes)
 		CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_WOLFSSL
 		LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_WOLFSSL
 		ifeq ($(WITH_ATTESTATION),yes)
-			BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_ATTESTATION
+			ifeq ($(WITH_BROKER_ATTESTATION),yes)
+				BROKER_CFLAGS:=${BROKER_CFLAGS} -I${WAMR_PATH}/core/iwasm/libraries/lib-rats
+				BROKER_LDFLAGS:=${BROKER_LDFLAGS} -Wl,--allow-undefined
+				BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_BROKER_ATTESTATION
+			endif
 			LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_ATTESTATION
+			LIB_CFLAGS:=$(LIB_CFLAGS) -DWITH_ATTESTATION
+			LIB_LDFLAGS:=$(LIB_LDFLAGS)
 		endif
 	else
 		ifeq ($(TARGET_WASM), yes)

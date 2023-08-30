@@ -128,7 +128,7 @@ void mosquitto_get_attestation_set(struct mosquitto *mosq, void (*get_attestatio
 	pthread_mutex_unlock(&mosq->log_callback_mutex);
 }
 
-void mosquitto_verify_attestation_set(struct mosquitto *mosq, void (*verify_attestation)(const ATT_REQUEST *, const byte *))
+void mosquitto_verify_attestation_set(struct mosquitto *mosq, int (*verify_attestation)(const ATT_REQUEST *, const byte *))
 {
 	pthread_mutex_lock(&mosq->log_callback_mutex);
 	mosq->verify_attestation = verify_attestation;

@@ -963,7 +963,7 @@ int net__socket_connect_step3(struct mosquitto *mosq, const char *host)
 		if(mosq->get_attestation_challenge && mosq->verify_attestation) {
 			wolfSSL_KeepArrays(mosq->ssl);
 			
-			ATT_REQUEST *att_request;
+			ATT_REQUEST *att_request = malloc(sizeof(ATT_REQUEST));
 			mosq->get_attestation_challenge(att_request);
 			if (wolfSSL_AttestationRequest(mosq->ssl, att_request) != SSL_SUCCESS) {
 				log__printf(mosq, MOSQ_LOG_ERR, "wolfSSL_AttestationRequest() failure: could not set the attestation request");
