@@ -289,6 +289,7 @@ static int client_certificate_verify(int preverify_ok, X509_STORE_CTX *ctx)
 #ifdef FINAL_WITH_TLS_PSK
 static unsigned int psk_server_callback(SSL *ssl, const char *identity, unsigned char *psk, unsigned int max_psk_len)
 {
+	printf("server callback for psk %s %s %d\n", identity, psk, max_psk_len);
 	struct mosquitto *context;
 	struct mosquitto__listener *listener;
 	char *psk_key = NULL;
@@ -357,7 +358,7 @@ int net__tls_server_ctx(struct mosquitto__listener *listener)
 		return MOSQ_ERR_TLS;
 	}
 
-#ifdef SSL_OP_NO_TLSv1_3
+#if defined(SSL_OP_NO_TLSv1_3) && !defined(WITH_WOLFSSL)
 	if(db.config->per_listener_settings){
 		if(listener->security_options.psk_file){
 			SSL_CTX_set_options(listener->ssl_ctx, SSL_OP_NO_TLSv1_3);

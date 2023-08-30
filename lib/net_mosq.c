@@ -757,7 +757,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 			}
 		}
 
-#ifdef SSL_OP_NO_TLSv1_3
+#if defined(SSL_OP_NO_TLSv1_3) && !defined(WITH_WOLFSSL)
 		if(mosq->tls_psk){
 			SSL_CTX_set_options(mosq->ssl_ctx, SSL_OP_NO_TLSv1_3);
 		}
