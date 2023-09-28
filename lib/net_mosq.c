@@ -447,6 +447,7 @@ int net__wasm_getaddrinfo(const char *host, struct addrinfo *hints, struct addri
 	return rc;
 }
 
+#endif
 /**
  * Enable tcp delayed ack by disabling quick ack
  */
@@ -455,7 +456,6 @@ void net__wasm_enable_tcp_delayed_ack(int sock_fd) {
     setsockopt(sock_fd, IPPROTO_TCP, TCP_QUICKACK, &quick_ack_enabled, sizeof(quick_ack_enabled));
 }
 
-#endif
 
 static int net__try_connect_tcp(const char *host, uint16_t port, mosq_sock_t *sock, const char *bind_address, bool blocking)
 {
@@ -551,9 +551,7 @@ static int net__try_connect_tcp(const char *host, uint16_t port, mosq_sock_t *so
 	if(bind_address){
 		freeaddrinfo(ainfo_bind);
 	}
-#ifdef __wasi__
 	net__wasm_enable_tcp_delayed_ack(*sock);
-#endif
 	if(!rp){
 		return MOSQ_ERR_ERRNO;
 	}

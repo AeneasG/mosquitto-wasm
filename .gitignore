@@ -95,4 +95,5 @@ iwasm*
 src/ca_cert.h
 src/server_cert.h
 src/server_key.h
+src/psk_file.h
 src/mosquitto_conf.h

@@ -174,9 +174,7 @@ struct mosquitto *net__socket_accept(struct mosquitto__listener_sock *listensock
 	char address[1024];
 #endif
 	new_sock = accept(listensock->sock, NULL, 0);
-#ifdef __wasi__
     net__wasm_enable_tcp_delayed_ack(new_sock);
-#endif
 	if(new_sock == INVALID_SOCKET){
 #ifdef WIN32
 		errno = WSAGetLastError();
