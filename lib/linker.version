@@ -140,6 +140,10 @@ MOSQ_1.7 {
 		mosquitto_property_identifier_to_string;
 		mosquitto_property_next;
 		mosquitto_ssl_get;
+} MOSQ_1.6;
+
+MOSQ_1.8 {
+	global:
 		mosquitto_verify_attestation_set;
 		mosquitto_get_attestation_set;
-} MOSQ_1.6;
+} MOSQ_1.7;

@@ -44,7 +44,6 @@ typedef SSIZE_T ssize_t;
 #    define EINPROGRESS WSAEINPROGRESS
 #  endif
 #elif __wasi__
-
 int net__shutdown_and_close_wasi(mosq_sock_t sock);
 #  define COMPAT_CLOSE(a) net__shutdown_and_close_wasi(a)
 #  define COMPAT_ECONNRESET ECONNRESET
@@ -69,7 +68,7 @@ int net__shutdown_and_close_wasi(mosq_sock_t sock);
 /* Macros for accessing the MSB and LSB of a uint16_t */
 #define MOSQ_MSB(A) (uint8_t)((A & 0xFF00) >> 8)
 #define MOSQ_LSB(A) (uint8_t)(A & 0x00FF)
-void net__wasm_enable_tcp_delayed_ack(int sock_fd);
+
 int net__init(void);
 void net__cleanup(void);
 
