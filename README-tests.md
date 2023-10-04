@@ -30,7 +30,7 @@ and may be unsuitable on e.g. a Raspberry Pi.
 The tests require Python 3 and CUnit to be installed.
 
 # Run tests WASM
-There are various adaptations of the test suite to run with WASM. Currently, Unit Tests cannot be compiled as the `CUnit` library depends on `setjmp` which is not supported by WASI. However, there is work in progress and maybe soon, we can also run unit tests in WASM.
+There are various adaptations of the test suite to run with WASM. Currently, Unit Tests cannot be compiled as the `CUnit` library depends on `setjmp` which is not supported by WASI. 
 
 Regarding the other tests, you can set the flag `wasm` in `test/mosq_test.py` to `True` to run tests with a WASM broker. Note, that this assumes that you have a `WAMR` runtime called `iwasm` in the root of this repository.
 
@@ -48,3 +48,24 @@ make TARGET_WASM=yes test
 Note: To run ssl related tests, move the generated ssl certificates into the folder you are currently testing. E.g. when running tests from `broker` folder, then move / copy the `ssl` folder into the `broker` folder. 
 
 Additionally, you need an excecutable [WAMR runtime](https://github.com/bytecodealliance/wasm-micro-runtime) called `iwasm` in the root of the mosquitto repository. See more information in `README-compiling`.
+
+# Run tests IntelSGX
+The IntelSGX implementation depends on the WASM implementation and therefore has the same limitations.
+
+In a standard SGX use case one would not pass the configuration using a file that resides in the untrusted part. However, to simplify testing, we should still rely on a configuration file as otherwise for every new test configuration a rebuild would be necessary. Consequently, do not build mosquitto with `-SGX_EMBEDDED_CONFIG=yes`.
+
+Additionally, a special flag intended for testing called `SGX_TEST_MODE` has been introduced that automatically sets the `socket_domain` on the listener to `Ipv4` to avoid rewrite all configuration.
+
+This means, you should build the broker like the following:
+
+````bash
+make TARGET_WASM=yes TARGET_INTEL_SGX=yes SGX_TEST_MODE=yes
+````
+
+Further, you will have to set the flag `wasm` in `test/mosq_test.py` to `False` and the flag `wasm_sgx` to `True`.
+Additionally, you will need to setup a WAMR runtime and an enclave. Please follow the details in the `README-compiling.md` to setup.
+
+Eventually, you can run the tests
+````bash
+make TARGET_WASM=yes TARGET_INTEL_SGX=yes test
+````
