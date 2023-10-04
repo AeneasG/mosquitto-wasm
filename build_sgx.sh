@@ -1,4 +1,4 @@
-WAMR_PATH=${1:/opt/wasm-micro-runtime}
+WAMR_PATH=${1:-/opt/wasm-micro-runtime}
 
 make clean
 make TARGET_WASM=yes TARGET_INTEL_SGX=yes SGX_EMBEDDED_CONFIG=yes
