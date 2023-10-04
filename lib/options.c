@@ -25,6 +25,9 @@ Contributors:
 #include <string.h>
 
 #ifdef WITH_TLS
+#if defined(WITH_WOLFSSL) && !defined(OPENSSL_NO_ENGINE)
+#define OPENSSL_NO_ENGINE
+#endif
 #  ifdef WIN32
 #    include <winsock2.h>
 #  endif

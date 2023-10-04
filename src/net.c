@@ -832,6 +832,7 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 	ainfo = malloc(sizeof(struct addrinfo));
 	memset(ainfo, 0, sizeof(struct addrinfo));
 	ainfo->ai_family = listener->socket_domain;
+	ainfo->ai_socktype = SOCK_STREAM;
 	ainfo->ai_protocol = IPPROTO_TCP;
 
 	if((listener->socket_domain) == AF_INET) {
