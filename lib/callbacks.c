@@ -134,4 +134,4 @@ void mosquitto_verify_attestation_set(struct mosquitto *mosq, int (*verify_attes
 	mosq->verify_attestation = verify_attestation;
 	pthread_mutex_unlock(&mosq->log_callback_mutex);
 }
-#endif
+#endif /* WITH_ATTESTATION */

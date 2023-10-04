@@ -418,7 +418,7 @@ static void signal__setup(void)
 	CreateThread(NULL, 0, SigThreadProc, NULL, 0, NULL);
 #endif
 }
-#endif
+#endif /* __wasi__ */
 
 
 static int pid__write(void)

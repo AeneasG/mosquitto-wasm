@@ -428,8 +428,8 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 		if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--daemon")){
 			config->daemon = true;
 		}else 
-#endif
-#endif
+#endif /* __wasi__ */
+#endif /* SGX_EMBEDDED_CONFIG */
 		if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")){
 			print_usage();
 			return MOSQ_ERR_INVAL;
@@ -457,7 +457,7 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 		}else if(!strcmp(argv[i], "-v") || !strcmp(argv[i], "--verbose")){
 			db.verbose = true;
 		}
-#endif
+#endif /* SGX_EMBEDDED_CONFIG */
 		else {
 			fprintf(stderr, "Error: Unknown option '%s'.\n",argv[i]);
 			print_usage();
@@ -466,7 +466,7 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 	}
 
 #ifdef SGX_EMBEDDED_CONFIG
-	/* read config from buffer */
+	/* read config from buffer in any case */
 	db.config_file = "buffer_conf";
 	config__read(config, false);
 #endif
@@ -795,6 +795,7 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 	char *kpass_sha = NULL, *kpass_sha_bin = NULL;
 	char *keyform ;
 #endif
+
 	*lineno = 0;
 
 #ifdef SGX_EMBEDDED_CONFIG
@@ -807,14 +808,12 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 	/* now split the string with \n as delimiter */
     char *nextConfLine = strsep(tokenToSplit, "\n");
 	buf = &nextConfLine;
-#endif
 
-#ifdef SGX_EMBEDDED_CONFIG
 	/* Intel SGX: read as input from the mosquitto_conf buffer instead of the file */
 	while(buf != NULL) {
 #else
 	while(fgets_extending(buf, buflen, fptr)){
-#endif
+#endif /* SGX_EMBEDDED_CONFIG */
 		(*lineno)++;
 		/* If string is empty altoghether, a comment or just an empty line, we skip it */
 		if(strlen(*buf) > 0 && (*buf)[0] != '#' && (*buf)[0] != 10 && (*buf)[0] != 13){
@@ -831,7 +830,7 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 					continue;
 				}
 			}
-#endif
+#endif /* SGX_EMBEDDED_CONFIG */
 			token = strtok_r((*buf), " ", &saveptr);
 			if(token){
 				if(!strcmp(token, "acl_file")){
@@ -1640,10 +1639,8 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 						return MOSQ_ERR_INVAL;
 					}
 				}else if(!strcmp(token, "log_facility")){
-#if defined(WIN32) || defined(__CYGWIN__)
-					log__printf(NULL, MOSQ_LOG_WARNING, "Warning: log_facility not supported on Windows.");
-#elif __wasi__
-                    log__printf(NULL, MOSQ_LOG_WARNING, "Warning: log_facility not supported in WASI.");
+#if defined(WIN32) || defined(__CYGWIN__) || __wasi__
+					log__printf(NULL, MOSQ_LOG_WARNING, "Warning: log_facility not supported on Windows / WASI.");
 #else
 					if(conf__parse_int(&token, "log_facility", &tmp_int, saveptr)) return MOSQ_ERR_INVAL;
 					switch(tmp_int){
@@ -2297,13 +2294,13 @@ int config__read_file(struct mosquitto__config *config, bool reload, const char 
 	}
 #endif
 
-/* We don't read from a file in Intel SGX but from a buffer*/
 #ifndef SGX_EMBEDDED_CONFIG
+    /* We don't read from a file in Intel SGX but from a buffer*/
 	fptr = mosquitto__fopen(file, "rt", false);
 	if(!fptr){
 		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to open config file %s.", file);
 		return 1;
-	}	
+	}
 #endif
 
 	buflen = 1000;

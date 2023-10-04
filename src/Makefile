@@ -4,7 +4,7 @@ include ../config.mk
 
 all : mosquitto
 
-EMBED_CERTS= ca_cert.h \
+EMBEDDED_CERTS= ca_cert.h \
 		server_cert.h \
 		server_key.h
 
@@ -187,7 +187,7 @@ mux_poll.o : mux_poll.c mosquitto_broker_internal.h
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 
 ifeq ($(SGX_EMBEDDED_CONFIG),yes)
-net.o : net.c mosquitto_broker_internal.h ${EMBED_CERTS}
+net.o : net.c mosquitto_broker_internal.h ${EMBEDDED_CERTS}
 	${CROSS_COMPILE}${CC} $(BROKER_CPPFLAGS) $(BROKER_CFLAGS) -c $< -o $@
 else
 net.o : net.c mosquitto_broker_internal.h

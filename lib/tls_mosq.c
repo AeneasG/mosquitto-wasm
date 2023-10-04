@@ -93,7 +93,7 @@ int mosquitto__server_certificate_verify(int preverify_ok, X509_STORE_CTX *ctx)
 	}else{
 		return preverify_ok;
 	}
-	#endif
+	#endif /* WITH_WOLFSSL */
 }
 
 static int mosquitto__cmp_hostname_wildcard(char *certname, const char *hostname)

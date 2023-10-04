@@ -138,6 +138,12 @@ static void net__print_error(unsigned int log, const char *format_str)
 
 
 #ifdef WITH_BROKER_ATTESTATION
+/**
+ * Generate attestation evidence to prove the broker is genuine
+ * given a challenge and an output buffer
+ * This is a callback that is invoked by wolfSSL
+ * and makes use of librats to generate the evidence
+ */
 int net__generate_attestation(const ATT_REQUEST *req, const byte *challenge, byte *output) {
 	char *evidence_json = NULL;
 	int ret_code = -1;
@@ -173,6 +179,7 @@ struct mosquitto *net__socket_accept(struct mosquitto__listener_sock *listensock
 	struct request_info wrap_req;
 	char address[1024];
 #endif
+
 	new_sock = accept(listensock->sock, NULL, 0);
 	if(new_sock == INVALID_SOCKET){
 #ifdef WIN32
@@ -569,7 +576,7 @@ int net__load_certificates(struct mosquitto__listener *listener)
 }
 
 
-#if defined(WITH_TLS) && !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
+#if defined(WITH_TLS) && !defined(OPENSSL_NO_ENGINE)
 static int net__load_engine(struct mosquitto__listener *listener)
 {
 	ENGINE *engine = NULL;
@@ -670,10 +677,10 @@ int net__tls_load_verify(struct mosquitto__listener *listener)
 			return MOSQ_ERR_TLS;
 		}
 	}
-#  endif
-#  endif
+#  endif /* OPENSSL_VERSION_NUMBER < 0x30000000L */
+#  endif /* SGX_EMBEDDED_CONFIG */
 
-#  if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
+#  if !defined(OPENSSL_NO_ENGINE)
 	if(net__load_engine(listener)){
 		return MOSQ_ERR_TLS;
 	}
@@ -760,7 +767,6 @@ int net__wasm_getaddrinfo_broker(struct mosquitto__listener *listener, const cha
 	 * Returns 0 on success
 	 */
 	int rc = 0;
-	hints->ai_socktype = SOCK_STREAM;
 
     if(listener->host == NULL){
         listener->host = "localhost";
@@ -812,6 +818,8 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 
 	snprintf(service, 10, "%d", listener->port);
     memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_socktype = SOCK_STREAM;
+
 #ifdef INTEL_SGX
 	if(!(listener->socket_domain)){
 #ifdef SGX_TEST_MODE
@@ -824,7 +832,6 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 	ainfo = malloc(sizeof(struct addrinfo));
 	memset(ainfo, 0, sizeof(struct addrinfo));
 	ainfo->ai_family = listener->socket_domain;
-	ainfo->ai_socktype = SOCK_STREAM;
 	ainfo->ai_protocol = IPPROTO_TCP;
 
 	if((listener->socket_domain) == AF_INET) {
@@ -835,23 +842,15 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
 		((struct sockaddr_in *)ainfo->ai_addr)->sin_port = htons(listener->port);
 		inet_pton(AF_INET, listener->host, &((struct sockaddr_in *)ainfo->ai_addr)->sin_addr);
 	} else {
-		/* Implementation for ipv6, but currently not supported in IntelSGX by WAMR */
-		/* ainfo->ai_addrlen = sizeof(struct sockaddr_in6);
-		ainfo->ai_addr = malloc(sizeof(struct sockaddr_in6));
-		memset(ainfo->ai_addr, 0, sizeof(struct sockaddr_in6));
-		((struct sockaddr_in6 *)ainfo->ai_addr)->sin6_family = AF_INET6;
-		((struct sockaddr_in6 *)ainfo->ai_addr)->sin6_port = htons(listener->port);
-		inet_pton(AF_INET6, listener->host, &((struct sockaddr_in6 *)ainfo->ai_addr)->sin6_addr); */
+		/* Implementation for ipv6 currently not supported */
 		log__printf(NULL, MOSQ_LOG_ERR, "IntelSGX does currently not support IPv6. Please specify only ipv4 listeners.");
 		return INVALID_SOCKET;
 	}
 	rc = 0;
-
 #elif defined(__wasi__)
     rc = net__wasm_getaddrinfo_broker(listener, service, &hints, &ainfo);
 #else
     hints.ai_flags = AI_PASSIVE;
-    hints.ai_socktype = SOCK_STREAM;
 
 	if(listener->socket_domain){
 		hints.ai_family = listener->socket_domain;
@@ -859,7 +858,8 @@ static int net__socket_listen_tcp(struct mosquitto__listener *listener)
         hints.ai_family = AF_UNSPEC;
 	}
 	rc = getaddrinfo(listener->host, service, &hints, &ainfo);
-#endif
+#endif /* INTEL_SGX */
+
 	if (rc){
 #ifdef __wasi__
 		log__printf(NULL, MOSQ_LOG_ERR, "Error creating listener: %s.", strerror(errno));
@@ -1052,7 +1052,6 @@ int net__socket_listen(struct mosquitto__listener *listener)
 				return 1;
 			}
 		}
-
 #  ifdef FINAL_WITH_TLS_PSK
 		if(listener->psk_hint){
 			if(tls_ex_index_context == -1){

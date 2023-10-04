@@ -12,6 +12,7 @@ callgrind.out.*
 dhat.out.*
 massif.out.*
 vglog*
+iwasm*
 
 c/*.test
 cpp/*.test
@@ -58,6 +59,12 @@ man/mqtt.7
 
 out/
 
+
+src/ca_cert.h
+src/server_cert.h
+src/server_key.h
+src/psk_file.h
+src/mosquitto_conf.h
 src/mosquitto
 
 test/broker/broker.pid
@@ -91,9 +98,3 @@ test/unit/out/
 
 www/cache/
 __pycache__
-iwasm*
-src/ca_cert.h
-src/server_cert.h
-src/server_key.h
-src/psk_file.h
-src/mosquitto_conf.h

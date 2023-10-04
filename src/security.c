@@ -47,7 +47,7 @@ void LIB_ERROR(void)
 #elif defined(__wasi__)
 	log__printf(NULL, MOSQ_LOG_ERR, "Load error: %s", strerror(errno));
 #else
-    log__printf(NULL, MOSQ_LOG_ERR, "Load error: %s", dlerror());
+	log__printf(NULL, MOSQ_LOG_ERR, "Load error: %s", dlerror());
 #endif
 }
 

@@ -144,7 +144,7 @@ UI_METHOD *net__get_ui_method(void)
 {
 	return _ui_method;
 }
-#endif
+#endif /* WITH_WOLFSSL */
 
 #endif
 
@@ -173,8 +173,8 @@ void net__cleanup(void)
 	ERR_remove_thread_state(NULL);
 	EVP_cleanup();
 
-#    if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
-    ENGINE_cleanup();
+#    if !defined(OPENSSL_NO_ENGINE)
+	ENGINE_cleanup();
 #    endif
 	is_tls_initialized = false;
 #  endif
@@ -182,7 +182,7 @@ void net__cleanup(void)
 	CONF_modules_unload(1);
 #ifndef WITH_WOLFSSL
     cleanup_ui_method();
-#endif
+#endif /* WITH_WOLFSSL */
 #endif
 
 #ifdef WITH_SRV
@@ -213,7 +213,7 @@ void net__init_tls(void)
 #endif
 #ifndef WITH_WOLFSSL
 	setup_ui_method();
-#endif
+#endif /* WITH_WOLFSSL */
 	if(tls_ex_index_mosq == -1){
 		tls_ex_index_mosq = SSL_get_ex_new_index(0, "client context", NULL, NULL, NULL);
 	}
@@ -411,14 +411,14 @@ int net__try_connect_step2(struct mosquitto *mosq, uint16_t port, mosq_sock_t *s
 #endif
 
 #ifdef __wasi__
+/**
+ * This is a wrapper for the WASI implementation of getaddrinfo.
+ * It is necessary as the WASI implementation does not support the AF_UNSPEC flag in the address hints
+ * Consequentely, this method will call getaddrinfo twice, once for IPv4 and once for IPv6
+ * The results will be merged into a single addrinfo struct
+ * Returns 0 on success
+ */
 int net__wasm_getaddrinfo(const char *host, struct addrinfo *hints, struct addrinfo **ainfo) {
-	/**
-	 * This is a wrapper for the WASI implementation of getaddrinfo.
-	 * It is necessary as the WASI implementation does not support the AF_UNSPEC flag in the address hints
-	 * Consequentely, this method will call getaddrinfo twice, once for IPv4 and once for IPv6
-	 * The results will be merged into a single addrinfo struct
-	 * Returns 0 on success
-	 */
 	int rc;
 	struct addrinfo *rp;
 	if(host == NULL){
@@ -446,8 +446,7 @@ int net__wasm_getaddrinfo(const char *host, struct addrinfo *hints, struct addri
 	}
 	return rc;
 }
-
-#endif
+#endif /* WITH_WOLFSSL */
 
 static int net__try_connect_tcp(const char *host, uint16_t port, mosq_sock_t *sock, const char *bind_address, bool blocking)
 {
@@ -468,7 +467,7 @@ static int net__try_connect_tcp(const char *host, uint16_t port, mosq_sock_t *so
 #else
     hints.ai_family = AF_UNSPEC;
     s = getaddrinfo(host, NULL, &hints, &ainfo);
-#endif
+#endif /* __wasi__ */
 
 	if(s){
 		errno = s;
@@ -705,7 +704,7 @@ static int net__tls_load_ca(struct mosquitto *mosq)
 static int net__init_ssl_ctx(struct mosquitto *mosq)
 {
 	int ret;
-#ifndef WITH_WOLFSSL
+#ifndef OPENSSL_NO_ENGINE
 	ENGINE *engine = NULL;
 #endif
 	uint8_t tls_alpn_wire[256];
@@ -789,7 +788,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 			SSL_CTX_set_mode(mosq->ssl_ctx, SSL_MODE_RELEASE_BUFFERS);
 #endif
 
-#if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
+#if !defined(OPENSSL_NO_ENGINE)
 		if(mosq->tls_engine){
 			engine = ENGINE_by_id(mosq->tls_engine);
 			if(!engine){
@@ -810,7 +809,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 			ret = SSL_CTX_set_cipher_list(mosq->ssl_ctx, mosq->tls_ciphers);
 			if(ret == 0){
 				log__printf(mosq, MOSQ_LOG_ERR, "Error: Unable to set TLS ciphers. Check cipher list \"%s\".", mosq->tls_ciphers);
-#if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
+#if !defined(OPENSSL_NO_ENGINE)
 				ENGINE_FINISH(engine);
 #endif
 				net__print_ssl_error(mosq);
@@ -820,7 +819,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 		if(mosq->tls_cafile || mosq->tls_capath || mosq->tls_use_os_certs){
 			ret = net__tls_load_ca(mosq);
 			if(ret != MOSQ_ERR_SUCCESS){
-#  if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
+#  if !defined(OPENSSL_NO_ENGINE)
 				ENGINE_FINISH(engine);
 #  endif
 				net__print_ssl_error(mosq);
@@ -845,7 +844,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 #else
 					log__printf(mosq, MOSQ_LOG_ERR, "Error: Unable to load client certificate \"%s\".", mosq->tls_certfile);
 #endif
-#if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
+#if !defined(OPENSSL_NO_ENGINE)
 					ENGINE_FINISH(engine);
 #endif
 					net__print_ssl_error(mosq);
@@ -854,7 +853,7 @@ static int net__init_ssl_ctx(struct mosquitto *mosq)
 			}
 			if(mosq->tls_keyfile){
 				if(mosq->tls_keyform == mosq_k_engine){
-#if !defined(OPENSSL_NO_ENGINE) && !defined(WITH_WOLFSSL)
+#if !defined(OPENSSL_NO_ENGINE)
 					UI_METHOD *ui_method = net__get_ui_method();
 					if(mosq->tls_engine_kpass_sha1){
 						if(!ENGINE_ctrl_cmd(engine, ENGINE_SECRET_MODE, ENGINE_SECRET_MODE_SHA, NULL, NULL, 0)){
@@ -948,7 +947,7 @@ int net__socket_connect_step3(struct mosquitto *mosq, const char *host)
 		}
 
 #if defined(WITH_ATTESTATION) && !defined(WITH_BROKER)
-
+        /* If both callbacks are set, we request attestation evidence */
 		if(mosq->get_attestation_challenge && mosq->verify_attestation) {
 			wolfSSL_KeepArrays(mosq->ssl);
 			
@@ -959,7 +958,7 @@ int net__socket_connect_step3(struct mosquitto *mosq, const char *host)
 				return MOSQ_ERR_TLS;
 			}
 
-			// set the callback for the verification of the attestation
+			/* set the callback for the verification of the attestation */
 			if (wolfSSL_SetVerifyAttestation(mosq->ssl, mosq->verify_attestation) != SSL_SUCCESS) {
 				log__printf(mosq, MOSQ_LOG_ERR, "wolfSSL_SetVerifyAttestation() failure: could not set the attestation verification callback");
 				return MOSQ_ERR_TLS;
@@ -980,9 +979,10 @@ int net__socket_connect_step3(struct mosquitto *mosq, const char *host)
 		}
 		SSL_set_bio(mosq->ssl, bio, bio);
 
-#ifdef WITH_WOLFSSL
+#if defined(WITH_WOLFSSL)
         /**
-         * we have WOLFSSL to tell here to verify the domain name
+         * problem with wolfSSL
+         * must instruct wolfSSL here to verify the domain name
          * otherwise the mosquitto__server_certificate_verify callback is not called
          * even though registered
          */
@@ -1092,11 +1092,7 @@ ssize_t net__read(struct mosquitto *mosq, void *buf, size_t count)
 
 #endif
 
-#ifdef __wasi__
-	// read is not available in intelSGX (respectively always returns -1 indicating an error)
-	// so we use recv instead
-	return recv(mosq->sock, buf, count, 0);
-#elif !defined(WIN32)
+#if !defined(WIN32) && !defined(__wasi__)
 	return read(mosq->sock, buf, count);
 #else
 	return recv(mosq->sock, buf, count, 0);
@@ -1126,6 +1122,7 @@ ssize_t net__write(struct mosquitto *mosq, const void *buf, size_t count)
 	}else{
 		/* Call normal write/send */
 #endif
+
 	return send(mosq->sock, buf, count, MSG_NOSIGNAL);
 
 #ifdef WITH_TLS

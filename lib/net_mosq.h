@@ -97,11 +97,13 @@ int net__socket_connect_tls(struct mosquitto *mosq);
 int mosquitto__verify_ocsp_status_cb(SSL * ssl, void *arg);
 #ifndef WITH_WOLFSSL
 UI_METHOD *net__get_ui_method(void);
-#define ENGINE_FINISH(e) if(e) ENGINE_finish(e)
 #endif
+#ifndef OPENSSL_NO_ENGINE
+#define ENGINE_FINISH(e) if(e) ENGINE_finish(e)
 #define ENGINE_SECRET_MODE "SECRET_MODE"
 #define ENGINE_SECRET_MODE_SHA 0x1000
 #define ENGINE_PIN "PIN"
-#endif
+#endif /* OPENSSL_NO_ENGINE */
+#endif /* WITH_TLS */
 
 #endif

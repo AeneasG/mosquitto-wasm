@@ -40,7 +40,6 @@ Contributors:
 #endif
 #include <stdio.h>
 #include <string.h>
-
 #if !defined(WIN32) && !defined(__wasi__)
 #  include <sys/socket.h>
 #elif defined(__wasi__)

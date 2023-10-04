@@ -125,4 +125,4 @@ DWORD WINAPI SigThreadProc(void* data)
 	return 0;
 }
 #endif
-#endif
+#endif /* __wasi__ */

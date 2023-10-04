@@ -776,7 +776,7 @@ static int pwfile__parse(const char *file, struct mosquitto__unpwd **root)
 		mosquitto__free(buf);
 		return MOSQ_ERR_UNKNOWN;
 	}
-#endif
+#endif /* SGX_EMBEDDED_CONFIG */
 
 #ifndef SGX_EMBEDDED_CONFIG
 	while(!feof(pwfile)){
@@ -784,7 +784,7 @@ static int pwfile__parse(const char *file, struct mosquitto__unpwd **root)
 #else
 	while(buf != NULL) {
 		if(buf[0] != '\0') {
-#endif
+#endif /* SGX_EMBEDDED_CONFIG */
 			if(buf[0] == '#') continue;
 			if(!strchr(buf, ':')) continue;
 
@@ -846,13 +846,13 @@ static int pwfile__parse(const char *file, struct mosquitto__unpwd **root)
 		} else {
 			buf = nextConfLine;
 		}
-#endif
+#endif /* SGX_EMBEDDED_CONFIG */
 	}
 #ifdef SGX_EMBEDDED_CONFIG
 	free(tempToken);
 #else
 	fclose(pwfile);
-#endif
+#endif /* SGX_EMBEDDED_CONFIG */
 	mosquitto__free(buf);
 
 	return MOSQ_ERR_SUCCESS;
@@ -977,7 +977,6 @@ static int unpwd__file_parse(struct mosquitto__unpwd **unpwd, const char *passwo
 	return rc;
 }
 
-// TODO here
 static int psk__file_parse(struct mosquitto__unpwd **psk_id, const char *psk_file)
 {
 	int rc;

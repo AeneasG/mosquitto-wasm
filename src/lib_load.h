@@ -34,7 +34,7 @@ Contributors:
 #	define LIB_CLOSE(A) dlclose(A)
 #	define LIB_SYM(HANDLE, SYM) dlsym(HANDLE, SYM)
 #else
-# warning "(Currently) no library loading support for WASI - Loading libraries will fail!"
+# warning "library loading not implemented in WASI"
 # define LIB_LOAD(A) NULL
 # define LIB_CLOSE(A) NULL
 # define LIB_SYM(HANDLE, SYM) NULL

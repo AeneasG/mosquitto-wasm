@@ -58,7 +58,7 @@ endif
 
 all : ${ALL_DEPS}
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
-# we don't build the C++ library for WASM
+# don't build the C++ library for WASM
 ifneq ($(TARGET_WASM), yes)
 	$(MAKE) -C cpp
 endif
@@ -80,7 +80,7 @@ endif
 	$(INSTALL) -m644 ../libmosquitto.pc.in "${DESTDIR}${libdir}/pkgconfig/libmosquitto.pc"
 	sed ${SEDINPLACE} -e "s#@CMAKE_INSTALL_PREFIX@#${prefix}#" -e "s#@VERSION@#${VERSION}#" "${DESTDIR}${libdir}/pkgconfig/libmosquitto.pc"
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
-# we don't install the C++ library for WASM as it is not built
+# don't install the C++ library for WASM as it is not built
 ifneq ($(TARGET_WASM), yes)
 	$(MAKE) -C cpp install
 endif
@@ -100,6 +100,7 @@ clean :
 
 libmosquitto.so.${SOVERSION} : ${MOSQ_OBJS}
 ifeq ($(TARGET_WASM), yes)
+	# will display warning that build is experimental only
 	${CROSS_COMPILE}$(CC) -nostdlib -Wl,--shared $(LIB_LDFLAGS) $^ -o $@ ${LIB_LIBADD}
 else
 	${CROSS_COMPILE}$(CC) -shared $(LIB_LDFLAGS) $^ -o $@ ${LIB_LIBADD}

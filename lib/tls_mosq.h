@@ -31,6 +31,9 @@ Contributors:
 #include <wolfssl/openssl/ssl.h>
 #else
 #include <openssl/ssl.h>
+#endif /* WITH_WOLFSSL */
+
+#ifndef OPENSSL_NO_ENGINE
 #include <openssl/engine.h>
 #endif
 
