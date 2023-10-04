@@ -91,12 +91,10 @@ WolfSSL has been used to provide TLS for mosquitto in the WASM version. WolfSSL 
 
 #### Build WolfSSL
 You will probably have to build first WolfSSL. To do so, perform the following steps:
-1. Clone [WolfSSL](https://github.com/X-Margin-Inc/wolfssl)
+1. Clone [WolfSSL](https://github.com/JamesMenetrey/wolfssl.git)
 2. Build and install the linux version to have the header files installed
 ```bash
 ./autogen
-# ocsp is an alternative way of validating certificates
-# enable-all makes sure the openssl compatibility layer is built as well
 ./configure --enable-ocsp --enable-nginx --enable-opensslall --enable-stunnel
 
 make
@@ -105,22 +103,12 @@ sudo make install
 sudo ldconfig 
 ```
 
-3. Build WolfSSL for WASM
-Go to `wolfssl/wolfio.h` and add the following lines at the top of the file
-
-```c
-#ifdef   __wasi__
-#include   <arpa/inet.h>;
-#include   <netinet/in.h>;
-#endif
-```
-
-Then, build wolfssl as described in `$WOLFSSLROOT/IDE/Wasm/README.md` but add the following flags to `Wolfssl_C_Extra_Flags`
-``-DHAVE_OCSP -DHAVE_CERTIFICATE_STATUS_REQUEST -DOPENSSL_EXTRA -DOPENSSL_ALL -DHAVE_EX_DATA -DSESSION_CERTS -DWOLFSSL_SYS_CA_CERTS -DOPENSSL_COMPATIBLE_DEFAULTS``
-
+3. Build the wasm version of WolfSSL 
+ * checkout the branch `wasm_merge_2023_03_31_with_ra`
+ * go to ``IDE/Wasm`` and follow the instructions
 4. Copy wolfssl lib
 ````bash
-sudo cp libwolfssl.a /usr/local/lib/libwolfssl.a
+sudo cp libwolfssl.a build_deps/libwolfssl.a
 ````
 
 Now you should be ready to build mosquitto with WolfSSL by running
@@ -135,6 +123,7 @@ Mosquitto broker is able to run in an [Intel SGX](https://www.intel.com/content/
 The current tradeoffs are as follows:
 * Certificates must be embedded at compile-time and are loaded from buffers instead of the filesystem
 * Configuration must be embedded at compile-time and is loaded from a buffer
+* ACL must be embedded at compile time
 * Persistency is supported, but only on the untrusted file system (use of IFPS is not implemented)
 
 Further, there are some features not working as expected compared to the native version, i.e.
@@ -142,17 +131,18 @@ Further, there are some features not working as expected compared to the native 
 * IPv6 addresses are not supported. You can just listen on IPv4 addresses
 * Persistence: only supported without IFPS. The persisted file is readable to anyone!
 * Differenct certificates per listener are not implemented, the borker uses the same embedded certificate for all listeners
-* ACL as well as CRL are not implemented
+* ACLs and CRLs are not implemented
 * all features not working in WASM won't work here either
-* Non TLS traffic: Currently the broker expect and uses embedded certificates for all listeners effectively disabling non secured connections
 
 #### Compile
-To get started, create in the root of this project a file called `mosquitto.conf` and put your configuration of the broker in it. You can omit the references to `cafile`, `certfile` as well as `keyfile` as they are embedded during compile time and automatically loaded by the application regardless of any configuration. Also note the section above about non-working features.
+To get started, create in the root of this project a file called `mosquitto.conf` and put your configuration of the broker in it. 
+Note about the non-working features described above
 
 Next, create a folder in the root of this project called `certs` and place the following files in it with the correct name:
 * `server.key`: the broker's private key
 * `server.crt`: the server's certificate for the corresponding private key
 * `ca.crt`: the certificate chain of all trusted certificates
+* `psk_file.txt`: the file containing the pre-shared keys, can also be empty but must exist
 
 If you have done these steps, you can run in the root of this project the following build command:
 ```bash

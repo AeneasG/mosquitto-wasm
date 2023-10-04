@@ -69,3 +69,5 @@ Eventually, you can run the tests
 ````bash
 make TARGET_WASM=yes TARGET_INTEL_SGX=yes test
 ````
+
+Note, that only broker tests are working as the clients have not been ported to Intel SGX.
